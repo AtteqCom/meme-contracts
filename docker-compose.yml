@@ -1,0 +1,21 @@
+builder:
+  build: ./
+  stdin_open: true
+  tty: true
+  dockerfile: docker/Dockerfile.builder
+  links:
+    - ganache
+  environment:
+    SET_CONTAINER_TIMEZONE: 'True'
+    CONTAINER_TIMEZONE: Europe/Prague
+  volumes:
+    - "./build/:/marblegame/build"
+    - "./src/contracts:/marblegame/contracts"
+    - "./src/migrations:/marblegame/migrations"
+    - "./src/test:/marblegame/test"
+ganache:
+  image: trufflesuite/ganache-cli:latest
+  command: ganache -p 8545 -h 0.0.0.0 --blockTime 5
+  environment:
+    SET_CONTAINER_TIMEZONE: 'True'
+    CONTAINER_TIMEZONE: Europe/Prague
