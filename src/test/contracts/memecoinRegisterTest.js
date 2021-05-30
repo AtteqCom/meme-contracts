@@ -6,9 +6,16 @@ const Memecoin = artifacts.require("./Memecoin.sol");
 const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
 
-const MTOKEN_CREATION_PRICE = new BN(10000);
+let MEMECOIN_DECIMALS = 18;
+
 const DODGDE_MTOKEN_NAME = 'DodgeMToken';
 const DODGDE_MTOKEN_SYMBOL = 'DGMT';
+
+let TEN_AS_BN = (new BN(10));
+let MEMECOIN_DECIMALS_AS_BN = TEN_AS_BN.pow(new BN(18));
+let MTOKEN_CREATION_PRICE = (new BN(1e6)).mul(MEMECOIN_DECIMALS_AS_BN);
+let MTOKEN_INITIAL_SUPPLY = (new BN(1e3)).mul(MEMECOIN_DECIMALS_AS_BN);
+
 
 contract("MemecoinRegister", accounts => {
 
@@ -27,13 +34,13 @@ contract("MemecoinRegister", accounts => {
     this.mTokenFactory = await MTokenFactory.new(this.memecoin.address, this.bancor.address);
 
     await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
-    this.initialReserveCurrencySupplyOfMToken = await this.memecoinRegister.initialReserveCurrencySupply();
+    this.initialReserveCurrencySupplyOfMToken = MTOKEN_INITIAL_SUPPLY;
 
     // sets actors
-    await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(this.initialReserveCurrencySupplyOfMToken), { from: summerAsCorrectCreator });
-    await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(this.initialReserveCurrencySupplyOfMToken), { from: mortyAsNotEnoughBalance });
+    await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), { from: summerAsCorrectCreator });
+    await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), { from: mortyAsNotEnoughBalance });
     await this.memecoin.transfer(mortyAsNotEnoughBalance,  MTOKEN_CREATION_PRICE.sub(new BN(1000)), {from: owner});
-    await this.memecoin.transfer(summerAsCorrectCreator,  MTOKEN_CREATION_PRICE.add(this.initialReserveCurrencySupplyOfMToken), {from: owner});
+    await this.memecoin.transfer(summerAsCorrectCreator,  MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), {from: owner});
   });
 
   describe("MemecoinRegister behavior", async() => {
@@ -79,16 +86,28 @@ contract("MemecoinRegister", accounts => {
           this.summerAsCorrectCreatorBalanceBeforeTest = await this.memecoin.balanceOf(summerAsCorrectCreator);
         });
 
-        it("Sets MTokenCreation Price", async () => {
-          const newMTokenCreationPrice = MTOKEN_CREATION_PRICE;
-          let currnetMTokenCreationPrice = await this.memecoinRegister.mTokenCreationPrice();
+        it("Sets MToken creation Price", async () => {
+          let currentMTokenCreationPrice = await this.memecoinRegister.mTokenCreationPrice();
     
-          let { logs } = await this.memecoinRegister.setMTokenCreationPrice(newMTokenCreationPrice);
-          expectEvent.inLogs(logs, 'MTokenCreationPriceChanged', { newPrice: newMTokenCreationPrice, oldPrice: currnetMTokenCreationPrice});
+          let { logs } = await this.memecoinRegister.setMTokenCreationPrice(MTOKEN_CREATION_PRICE);
+          expectEvent.inLogs(logs, 'MTokenCreationPriceChanged', { newPrice: MTOKEN_CREATION_PRICE, oldPrice: currentMTokenCreationPrice});
     
-          currnetMTokenCreationPrice = await this.memecoinRegister.mTokenCreationPrice();
+          currentMTokenCreationPrice = await this.memecoinRegister.mTokenCreationPrice();
     
-          assert.equal(newMTokenCreationPrice.toString(), currnetMTokenCreationPrice);
+          assert.equal(MTOKEN_CREATION_PRICE.toString(), currentMTokenCreationPrice);
+        });
+
+        it("Sets MToken initial supply of reserve currency", async () => {
+          
+          let currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
+    
+          let { logs } = await this.memecoinRegister.setMTokenReserveCurrencyInititalSupply(MTOKEN_INITIAL_SUPPLY);
+          expectEvent.inLogs(logs, 'MTokenReserveCurrencyInititalSupplyChanged', { newInitialSupply: MTOKEN_INITIAL_SUPPLY, oldInitialSupply: currentMTokenInititalSupply});
+    
+          currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
+          console.log(MTOKEN_INITIAL_SUPPLY.toString())
+          console.log(currentMTokenInititalSupply.toString());
+          assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
         });
     
         it("Reverts when creator has not set enough allowance", async () => {

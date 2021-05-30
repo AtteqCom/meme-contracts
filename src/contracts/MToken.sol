@@ -25,12 +25,6 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   string public constant ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL = 'ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL';
 
-  string public constant ERROR_CALLER_HAS_NOT_ENOUGH_RESERVED_CURRENCY_TO_INVEST = 'ERROR_CALLER_HAS_NOT_RESERVED_CURRENCY_TO_INVEST';
-
-  string public constant ERROR_CALLER_HAS_TO_SET_ALLOWANCE = 'ERROR_CALLER_HAS_TO_SET_ALLOWANCE';
-
-  string public constant ERROR_INVESTMENT_IS_PAUSED = 'ERROR_INVESTMENT_IS_PAUSED';
-
 
   /**
   * @dev Transaction fee applied to invest and sale prices where 1% is equal to 100. 100% equals to 10000

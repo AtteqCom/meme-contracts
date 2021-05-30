@@ -89,12 +89,11 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
       owner(),
       reserveCurrencyWeight,
       reserveCurrency,
-      bancorFormula);
+      bancorFormula
+    );
 
     address mTokenAddress = address(mToken);
     memecoinRegister.addMToken(ERC20(mToken));
-
-    MTokenCreated(address(mToken));
 
     emit MTokenCreated(mTokenAddress);
 

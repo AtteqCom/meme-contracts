@@ -10,7 +10,7 @@ import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.
 /// @title ERC721 token
 /// @dev This is used only for unit tests
 contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
-  // TODO Register as Priceable, Priceable
+  // TODO Register as TokenPriceable, Priceable
 
   bytes32 public constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
 
@@ -23,10 +23,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
 
   ERC20 public memecoin;
   MTokenFactoryInterface public mTokenFactory;
-
-  // TODO make it possible to setup by owner, or per creation
-  uint256 public constant initialReserveCurrencySupply = 1e18 * 1e6;
-  
+ 
   /**
   * @dev holds symbolic mToken registration IDs mapped to mToken contract addresses
   * (ids) 0..n => address_0..address_n (mToken contract addresses)
@@ -51,9 +48,14 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   uint256 public memecoinRegisterCount;
 
   /** 
-  * @dev Price 
+  * @dev Price of mToken creation/registration 
   */
   uint256 public mTokenCreationPrice = 0;
+
+  /** 
+  * @dev Amount of reserve currency to be transfered to newly created contract as initial reserve currency supply  
+  */
+  uint256 public mTokenReserveCurrencyInitialSupply = 0;
 
  
   /**
@@ -78,6 +80,13 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   */
   event MTokenCreationPriceChanged(uint256 newPrice, uint256 oldPrice);
 
+  /**
+  * @dev Event emited when MToken initial reserve currency changed
+  * @param newInitialSupply new amount of initial supply
+  * @param oldInitialSupply old amount of initial supply
+  */
+  event MTokenReserveCurrencyInititalSupplyChanged(uint256 newInitialSupply, uint256 oldInitialSupply);
+
   constructor() {
     memecoinRegisterCount = 0;
 
@@ -99,6 +108,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
 
     emit ReserveCurrencyChanged(address(_reserveCurrency), oldReserveCurrencyAddress);
   }
+
 
   /**
   * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
@@ -138,6 +148,21 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   }
 
   /**
+  * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
+  * @param _mTokenReserveCurrencyInitialSupply Address of new MTokenFactory contract
+  */
+  function setMTokenReserveCurrencyInititalSupply(uint256 _mTokenReserveCurrencyInitialSupply)
+    public
+    onlyOwner 
+  {
+    uint256 oldMTokenInitialReserveCurrencySupply = mTokenReserveCurrencyInitialSupply;
+
+    mTokenReserveCurrencyInitialSupply = _mTokenReserveCurrencyInitialSupply;
+
+    emit MTokenReserveCurrencyInititalSupplyChanged(mTokenReserveCurrencyInitialSupply, oldMTokenInitialReserveCurrencySupply);
+  }
+
+  /**
   * @dev Creates MToken contract after reserve currency transfer, caller has to add allowence to contract before calling.
   * @param _mTokenName Name of new MToken contract, lower-case should be unique in the register
   * @param _mTokenSymbol Symbol of new MToken contract, lower-case should be unique in the register
@@ -148,8 +173,8 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   {
     require(address(0) != address(memecoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
-    require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + initialReserveCurrencySupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
-    require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + initialReserveCurrencySupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+    require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
+    require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
 
     // TODO check uniqueness of name 
     // TODO check uniqueness of symbol
@@ -160,9 +185,9 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
 
     // adds initial funds of reserveCurrency to mToken contract
-    memecoin.transferFrom(msg.sender, address(mTokenAddress), initialReserveCurrencySupply);
+    memecoin.transferFrom(msg.sender, address(mTokenAddress), mTokenReserveCurrencyInitialSupply);
 
-    emit MTokenRegistered(mTokenAddress);
+    emit MTokenRegistered(mTokenAddress, mTokenCreationPrice, mTokenReserveCurrencyInitialSupply);
   }
   
 
@@ -185,6 +210,15 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     memecoinSymbolRegisterIndex[numericHashOfTokenSymbolName] = memecoinRegisterCount;
 
     memecoinRegisterCount = memecoinRegisterCount +1;
+  }
+
+  function totalRegistered() 
+    public
+    override
+    view 
+    returns (uint256 mtokensRegisteredCount)
+  {
+    return memecoinRegisterCount;
   }
 
 

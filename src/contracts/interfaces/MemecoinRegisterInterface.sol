@@ -23,7 +23,7 @@ interface MemecoinRegisterInterface {
    external;
 
   /**
-  * @dev Add new contract as registred one.
+  * @dev Add new contract as registered one.
   * @param _mTokenContract Adds new contract to registration list.
   */
   function addMToken(
@@ -31,10 +31,18 @@ interface MemecoinRegisterInterface {
   )
    external;
 
+  /**
+  * @dev Add new contract as registered one.
+  */
+  function totalRegistered()
+   external 
+   view 
+   returns (uint256 mtokensRegisteredCount);
+
   
   /**
   * @dev Event emited when a new MToken is created and added to register
   * @param mTokenContract Address of new MToken contract
   */
-  event MTokenRegistered(address mTokenContract);
+  event MTokenRegistered(address mTokenContract, uint256 creationPrice, uint256 initialReserveCurrencySupply);
 }
