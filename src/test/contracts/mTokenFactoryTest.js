@@ -1,8 +1,8 @@
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
-const MemeCoin = artifacts.require("./MemeCoin.sol");
-const MemeCoinRegister = artifacts.require("./MemeCoinRegister.sol");
+const Memecoin = artifacts.require("./Memecoin.sol");
+const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
 
 const timeOfCreation = Date.now();
@@ -12,13 +12,13 @@ contract("MTokenFactoryTest", accounts => {
   const [owner, rick, morty, summer, beth, jerry] = accounts;
 
   before(async () => {
-    this.memeCoin = await MemeCoin.new(new BN(1e8), "MemeCoin", "mCoin", {from: owner});
-    this.memeCoinRegister = await MemeCoinRegister.new();
+    this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
+    this.memecoinRegister = await MemecoinRegister.new();
 
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
 
-    this.mTokenFactory = await MTokenFactory.new(this.memeCoin.address, this.bancor.address);
+    this.mTokenFactory = await MTokenFactory.new(this.memecoin.address, this.bancor.address);
   });
 
   it("Checks revert when Meme Coin Register is not set", async () => {
@@ -26,15 +26,15 @@ contract("MTokenFactoryTest", accounts => {
     await expectRevert(this.mTokenFactory.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_REGISTER_NOT_SET);
   });
 
-  it("Sets MemeCoinRegister Contract", async () => {
-    let _memeCoinRegisterAddress = await this.mTokenFactory.memeCoinRegister();
+  it("Sets MemecoinRegister Contract", async () => {
+    let _memecoinRegisterAddress = await this.mTokenFactory.memecoinRegister();
 
-    const { logs } = await this.mTokenFactory.setMemeCoinRegsiter(this.memeCoinRegister.address);
-    expectEvent.inLogs(logs, 'MemeCoinRegisterChanged', { newMemeCoinRegisterAddress: this.memeCoinRegister.address, oldMemeCoinRegisterAddress: _memeCoinRegisterAddress });
+    const { logs } = await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
+    expectEvent.inLogs(logs, 'MemecoinRegisterChanged', { newMemecoinRegisterAddress: this.memecoinRegister.address, oldMemecoinRegisterAddress: _memecoinRegisterAddress });
 
-    _memeCoinRegisterAddress = await this.mTokenFactory.memeCoinRegister();
+    _memecoinRegisterAddress = await this.mTokenFactory.memecoinRegister();
 
-    assert.equal(this.memeCoinRegister.address, _memeCoinRegisterAddress);
+    assert.equal(this.memecoinRegister.address, _memecoinRegisterAddress);
   });
 
   it("Only Meme Coin Register contract as caller can create MToken", async () => {

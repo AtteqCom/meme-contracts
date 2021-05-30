@@ -5,11 +5,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
-import {MemeCoinRegisterInterface} from "./interfaces/MemeCoinRegisterInterface.sol";
+import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.sol";
 
 /// @title ERC721 token
 /// @dev This is used only for unit tests
-contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
+contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   // TODO Register as Priceable, Priceable
 
   bytes32 public constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
@@ -21,7 +21,7 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
   string public constant ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE';
   string public constant ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE';
 
-  ERC20 public memeCoin;
+  ERC20 public memecoin;
   MTokenFactoryInterface public mTokenFactory;
 
   // TODO make it possible to setup by owner, or per creation
@@ -31,24 +31,24 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
   * @dev holds symbolic mToken registration IDs mapped to mToken contract addresses
   * (ids) 0..n => address_0..address_n (mToken contract addresses)
   */
-  mapping(uint256 => address) public memeCoinRegister;
+  mapping(uint256 => address) public memecoinRegister;
 
   /**
   * @dev helper index, maps numeric hashes of mToken contract names to symbolic mToken registration ids
   * mToken_hash_0..mToken_hash_n => 0..n
   */
-  mapping(uint256 => uint256) public memeCoinRegisterIndex;
+  mapping(uint256 => uint256) public memecoinRegisterIndex;
 
   /**
   * @dev helper index, maps numeric hashes of mToken contract names to symbolic mToken registration ids
   * symbol_hash_0..symbol_hash_n => 0..n
   */
-  mapping(uint256 => uint256) public memeCoinSymbolRegisterIndex;
+  mapping(uint256 => uint256) public memecoinSymbolRegisterIndex;
 
   /**
   * @dev count of registered mToken contracts, or register Id of next regitered mToken contract
   */ 
-  uint256 public memeCoinRegisterCount;
+  uint256 public memecoinRegisterCount;
 
   /** 
   * @dev Price 
@@ -65,9 +65,9 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
 
 
   /**
-  * @dev Event emited when a new MemeCoin contract is set
-  * @param newReserveCurrency Address of the new MemeCoin address
-  * @param oldReserveCurrency Address of the old MemeCoin address
+  * @dev Event emited when a new Memecoin contract is set
+  * @param newReserveCurrency Address of the new Memecoin address
+  * @param oldReserveCurrency Address of the old Memecoin address
   */
   event ReserveCurrencyChanged(address newReserveCurrency, address oldReserveCurrency);
 
@@ -79,7 +79,7 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
   event MTokenCreationPriceChanged(uint256 newPrice, uint256 oldPrice);
 
   constructor() {
-    memeCoinRegisterCount = 0;
+    memecoinRegisterCount = 0;
 
     // Grant the contract deployer the default admin role: it will be able
     // to grant and revoke any roles
@@ -94,8 +94,8 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
     public
     onlyOwner 
   {
-    address oldReserveCurrencyAddress = address(memeCoin);
-    memeCoin = _reserveCurrency;
+    address oldReserveCurrencyAddress = address(memecoin);
+    memecoin = _reserveCurrency;
 
     emit ReserveCurrencyChanged(address(_reserveCurrency), oldReserveCurrencyAddress);
   }
@@ -146,21 +146,21 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
     external
     override
   {
-    require(address(0) != address(memeCoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
+    require(address(0) != address(memecoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
-    require(memeCoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + initialReserveCurrencySupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
-    require(memeCoin.balanceOf(msg.sender) >= mTokenCreationPrice + initialReserveCurrencySupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+    require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + initialReserveCurrencySupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
+    require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + initialReserveCurrencySupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
 
     // TODO check uniqueness of name 
     // TODO check uniqueness of symbol
 
-    memeCoin.transferFrom(msg.sender, owner(), mTokenCreationPrice);
+    memecoin.transferFrom(msg.sender, owner(), mTokenCreationPrice);
 
     // create
     address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
 
     // adds initial funds of reserveCurrency to mToken contract
-    memeCoin.transferFrom(msg.sender, address(mTokenAddress), initialReserveCurrencySupply);
+    memecoin.transferFrom(msg.sender, address(mTokenAddress), initialReserveCurrencySupply);
 
     emit MTokenRegistered(mTokenAddress);
   }
@@ -180,11 +180,11 @@ contract MemeCoinRegister is Ownable, AccessControl, MemeCoinRegisterInterface {
     uint256 numericHashOfTokenName = getNumericHashFromString(_mTokenContract.name());
     uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenContract.symbol());
 
-    memeCoinRegister[memeCoinRegisterCount] = address(_mTokenContract);
-    memeCoinRegisterIndex[numericHashOfTokenName] = memeCoinRegisterCount;
-    memeCoinSymbolRegisterIndex[numericHashOfTokenSymbolName] = memeCoinRegisterCount;
+    memecoinRegister[memecoinRegisterCount] = address(_mTokenContract);
+    memecoinRegisterIndex[numericHashOfTokenName] = memecoinRegisterCount;
+    memecoinSymbolRegisterIndex[numericHashOfTokenSymbolName] = memecoinRegisterCount;
 
-    memeCoinRegisterCount = memeCoinRegisterCount +1;
+    memecoinRegisterCount = memecoinRegisterCount +1;
   }
 
 

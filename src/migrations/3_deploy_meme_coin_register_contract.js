@@ -1,14 +1,14 @@
-const MemeCoin = artifacts.require("./MemeCoin.sol");
-const MemeCoinRegister = artifacts.require("./MemeCoinRegister.sol");
+const Memecoin = artifacts.require("./Memecoin.sol");
+const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
 
 const config = require('../config');
 
 module.exports = async function(deployer) {
-  let memeCoin = await MemeCoin.deployed();
+  let memecoin = await Memecoin.deployed();
 
-  await deployer.deploy(MemeCoinRegister);
+  await deployer.deploy(MemecoinRegister);
 
-  let memeCoinRegister = await MemeCoinRegister.deployed();
+  let memecoinRegister = await MemecoinRegister.deployed();
 
-  await memeCoinRegister.setReserveCurrency(memeCoin.address);
+  await memecoinRegister.setReserveCurrency(memecoin.address);
 };

@@ -34,6 +34,6 @@ note: `src` and `build` folders are mounted to contianer.
 
     ```
     inside@container:/marblegame# npx truffle test ./test/contracts/mTokenTest.js
-    inside@container:/marblegame# npx truffle test ./test/contracts/memeCoinRegisterTest.js
+    inside@container:/marblegame# npx truffle test ./test/contracts/memecoinRegisterTest.js
     inside@container:/marblegame# npx truffle test ./test/contracts/mTokenFactoryTest.js
     ```

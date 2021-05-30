@@ -19,7 +19,7 @@ interface MTokenFactoryInterface {
    external returns(address mTokenContract);
 
   /**
-  * @dev Event emited when a new MemeCoinRegister contract is set
+  * @dev Event emited when a new MemecoinRegister contract is set
   * @param mTokenContract Contract of newly created MToken contract
   */
   event MTokenCreated(address mTokenContract);

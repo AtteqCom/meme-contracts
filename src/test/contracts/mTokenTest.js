@@ -1,7 +1,7 @@
 const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
-const MemeCoin = artifacts.require("./MemeCoin.sol");
+const Memecoin = artifacts.require("./Memecoin.sol");
 const MToken = artifacts.require("./MToken.sol");
 
 
@@ -19,11 +19,11 @@ contract("MTokenTest", accounts => {
 
   before(async () => {
     this.mToken = null;
-    this.memeCoin = await MemeCoin.new(new BN(1e8), "MemeCoin", "mCoin", {from: owner});
+    this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
 
-    this.memeCoin.transfer(mortyAsInvestor, new BN(1e13), {from: owner});
-    this.memeCoin.transfer(summerAsInvestorWithoutAllowance, new BN(1e10), {from: owner});
-    this.memeCoin.transfer(jerryAsLoser, new BN(1e3), {from: owner});
+    this.memecoin.transfer(mortyAsInvestor, new BN(1e13), {from: owner});
+    this.memecoin.transfer(summerAsInvestorWithoutAllowance, new BN(1e10), {from: owner});
+    this.memecoin.transfer(jerryAsLoser, new BN(1e3), {from: owner});
 
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
@@ -36,7 +36,7 @@ contract("MTokenTest", accounts => {
       TOKEN_SYMBOL,
       rickAsMTokenOwner,
       RESERVE_WEIGHT,
-      this.memeCoin.address,
+      this.memecoin.address,
       this.bancor.address, {from: owner});
 
     assert.equal(await this.mToken.name(), TOKEN_NAME);
@@ -46,12 +46,12 @@ contract("MTokenTest", accounts => {
   describe("MToken behavior", () => {
     before(async () => {
       // important to set up reserve balance above 0!!!!
-      this.memeCoin.transfer(this.mToken.address, new BN(1), { from: owner });
+      this.memecoin.transfer(this.mToken.address, new BN(1), { from: owner });
 
-      this.memeCoin.increaseAllowance(this.mToken.address, new BN(1e13), { from: mortyAsInvestor });
-      this.memeCoin.increaseAllowance(this.mToken.address, new BN(1e3), {from: jerryAsLoser});
+      this.memecoin.increaseAllowance(this.mToken.address, new BN(1e13), { from: mortyAsInvestor });
+      this.memecoin.increaseAllowance(this.mToken.address, new BN(1e3), {from: jerryAsLoser});
 
-      this.rickAsMTokenOwnerBalanceBeforeTest = await this.memeCoin.balanceOf(rickAsMTokenOwner);
+      this.rickAsMTokenOwnerBalanceBeforeTest = await this.memecoin.balanceOf(rickAsMTokenOwner);
       this.correctIvestedFee = await this.mToken.computeFee(MORTYs_1ST_INVESTMENT);
     });
 
@@ -73,7 +73,7 @@ contract("MTokenTest", accounts => {
     });
   
     it("Check fee from investment", async () => {
-      assert.equal((this.rickAsMTokenOwnerBalanceBeforeTest.add(this.correctIvestedFee)).toString(), await this.memeCoin.balanceOf(rickAsMTokenOwner));
+      assert.equal((this.rickAsMTokenOwnerBalanceBeforeTest.add(this.correctIvestedFee)).toString(), await this.memecoin.balanceOf(rickAsMTokenOwner));
     });
 
     it("Revert few above limit", async () => {
@@ -86,8 +86,8 @@ contract("MTokenTest", accounts => {
     });
   
     it("Sell share", async () => {
-      let currentBalance = await this.memeCoin.balanceOf(mortyAsInvestor);
-      this.rickAsMTokenOwnerBalanceBeforeTest = await this.memeCoin.balanceOf(rickAsMTokenOwner);
+      let currentBalance = await this.memecoin.balanceOf(mortyAsInvestor);
+      this.rickAsMTokenOwnerBalanceBeforeTest = await this.memecoin.balanceOf(rickAsMTokenOwner);
 
       let { logs } = await this.mToken.sellShare(100, {from: mortyAsInvestor});
       expectEvent.inLogs(logs, 'SoldShare', { investor: mortyAsInvestor});
