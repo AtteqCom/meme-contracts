@@ -46,11 +46,11 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _account Address what desires to burn its tokens
   * @param _amount Amount of coins to burn
   */
-  function burn(address _account, uint256 _amount) 
+  function burn(uint256 _amount) 
     public 
     whenNotPaused
   {    
-    _burn(_account, _amount);
+    _burn(msg.sender, _amount);
   }
 
   /**
