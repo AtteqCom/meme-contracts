@@ -7,7 +7,7 @@ import {Memecoin} from "./Memecoin.sol";
 * @title Memecoin token
 * @dev main ERC20 currency for meme.com contracts
 */
-contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
+contract MemecoinMatic is Memecoin {
 
   // keeping it for checking, whether deposit being called by valid address or not
   address public childChainManagerProxy;
@@ -20,7 +20,8 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   // being proxified smart contract, most probably childChainManagerProxy contract's address
   // is not going to change ever, but still, lets keep it 
   function updateChildChainManager(address newChildChainManagerProxy) 
-    external onlyOwner
+    external 
+    onlyOwner
   {
     childChainManagerProxy = newChildChainManagerProxy;
   }
