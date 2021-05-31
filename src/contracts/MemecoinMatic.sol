@@ -4,8 +4,9 @@ pragma solidity 0.8.0;
 import {Memecoin} from "./Memecoin.sol";
 
 /**
-* @title Memecoin token
-* @dev main ERC20 currency for meme.com contracts
+* @title MemecoinMatic token
+* @dev main ERC20 currency for meme.com contracts extended on Matic recommended methods for childTokenContract
+* based on https://docs.matic.today/docs/develop/ethereum-matic/pos/calling-contracts/erc20/
 */
 contract MemecoinMatic is Memecoin {
 
