@@ -123,7 +123,7 @@ contract("MemecoinRegister", accounts => {
         it("Creates new MToken", async () => {
           //  set up allowance first
           let { logs } = await this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegister(await this.memecoinRegister.memecoinRegisterCount() -1);
+          let lastAddress = await this.memecoinRegister.memecoinRegister(await this.memecoinRegister.totalRegistered() -1);
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
         });
 
@@ -135,7 +135,7 @@ contract("MemecoinRegister", accounts => {
         });
 
         it("Check index of register", async () => {
-          let lastRegisteredId = new BN(await this.memecoinRegister.memecoinRegisterCount()) -1;
+          let lastRegisteredId = new BN(await this.memecoinRegister.totalRegistered()) -1;
           let lastMTokenContractAddress = await this.memecoinRegister.memecoinRegister(lastRegisteredId);
           let mToken = await ERC20.at(lastMTokenContractAddress);
 

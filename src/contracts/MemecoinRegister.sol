@@ -10,7 +10,6 @@ import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.
 /// @title ERC721 token
 /// @dev This is used only for unit tests
 contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
-  // TODO Register as TokenPriceable, Priceable
 
   bytes32 public constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
 
@@ -45,7 +44,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   /**
   * @dev count of registered mToken contracts, or register Id of next regitered mToken contract
   */ 
-  uint256 public memecoinRegisterCount;
+  uint256 private _memecoinRegisterCount;
 
   /** 
   * @dev Price of mToken creation/registration 
@@ -88,7 +87,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   event MTokenReserveCurrencyInititalSupplyChanged(uint256 newInitialSupply, uint256 oldInitialSupply);
 
   constructor() {
-    memecoinRegisterCount = 0;
+    _memecoinRegisterCount = 0;
 
     // Grant the contract deployer the default admin role: it will be able
     // to grant and revoke any roles
@@ -205,20 +204,24 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     uint256 numericHashOfTokenName = getNumericHashFromString(_mTokenContract.name());
     uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenContract.symbol());
 
-    memecoinRegister[memecoinRegisterCount] = address(_mTokenContract);
-    memecoinRegisterIndex[numericHashOfTokenName] = memecoinRegisterCount;
-    memecoinSymbolRegisterIndex[numericHashOfTokenSymbolName] = memecoinRegisterCount;
+    memecoinRegister[_memecoinRegisterCount] = address(_mTokenContract);
+    memecoinRegisterIndex[numericHashOfTokenName] = _memecoinRegisterCount;
+    memecoinSymbolRegisterIndex[numericHashOfTokenSymbolName] = _memecoinRegisterCount;
 
-    memecoinRegisterCount = memecoinRegisterCount +1;
+    _memecoinRegisterCount = _memecoinRegisterCount +1;
   }
 
+
+  /**
+  * @dev View returns count of registered MToken contracts  
+  */
   function totalRegistered() 
     public
     override
     view 
     returns (uint256 mtokensRegisteredCount)
   {
-    return memecoinRegisterCount;
+    return _memecoinRegisterCount;
   }
 
 
@@ -231,8 +234,32 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     pure
     returns(uint256 stringToNumericHash)
   {
-    // TODO toLowerCase
     return uint256(keccak256(abi.encodePacked(_stringToNumericHash)));
+  }
+
+  
+  /**
+  * @dev Transforms given string to its lowercase
+  * source from https://gist.github.com/thomasmaclean/276cb6e824e48b7ca4372b194ec05b97#gistcomment-3310610
+  * @param _strToLowerSource string to change to lower case
+  */
+  function transformToLowercase(string memory _strToLowerSource) 
+    public 
+    pure 
+    returns (string memory strToLower) 
+  {
+    bytes memory bStr = bytes(str);
+    bytes memory bLower = new bytes(bStr.length);
+     for (uint i = 0; i < bStr.length; i++) {
+      // Uppercase character...
+      if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
+        // So we add 32 to make it lowercase
+        bLower[i] = bytes1(uint8(bStr[i]) + 32);
+      } else {
+        bLower[i] = bStr[i];
+      }
+    }
+    return string(bLower);
   }
   
 }
