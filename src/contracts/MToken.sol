@@ -140,6 +140,47 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   }
 
   /**
+  * @dev Calculate amount of mTokens obtained by investing the given amount of Main Currency.
+  * @param _amountOfReserveCurrency amount of Main Currency
+  */
+  function calculateInvestReward(
+    uint256 _amountOfReserveCurrency
+  )
+    external
+    override
+    view
+    returns (uint256)
+  {
+    uint256 fee = computeFee(_amountOfReserveCurrency);
+    uint256 amountOfReserveCurrencyExcludingFee = _amountOfReserveCurrency - fee;
+
+    uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
+    uint256 mTokenAmount = bancorFormula.purchaseTargetAmount(totalSupply(), reserveBalance, reserveWeight, amountOfReserveCurrencyExcludingFee);
+
+    return mTokenAmount;    
+  }
+
+  /**
+  * @dev Calculate amount of Main Currency obtained by selling the given amount of Mtokens.
+    @param _amountOfMTokens amount of mTokens to sell
+  */
+  function calculateSellShareReward(
+    uint256 _amountOfMTokens
+  )
+    external
+    override
+    view
+    returns (uint256)
+  {
+    uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
+    uint256 reserveCurrencyAmountToReturnTotal = bancorFormula.saleTargetAmount(totalSupply(), reserveBalance, reserveWeight, _amountOfMTokens);
+    uint256 fee = computeFee(reserveCurrencyAmountToReturnTotal);
+    uint256 reserveCurrencyAmountToReturn = reserveCurrencyAmountToReturnTotal - fee;
+
+    return reserveCurrencyAmountToReturn;
+  }
+
+  /**
   * @dev Stops minting of coins.. in other words direct investment to coin is postponed 
   */
   function pauseMinting()
@@ -184,5 +225,17 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     returns (uint256)
   {
     return amount * transactionFee / 10000;
+  }
+
+  /**
+   * @dev Returns such reserve currency amount that when substracting the fee from returned value you wil get _reserveCurrencyAmountWithoutFee
+   * @param _reserveCurrencyAmountWithoutFee reserve currency amount
+   */
+  function computeInvestmentAmountWithFee(uint256 _reserveCurrencyAmountWithoutFee)
+    public
+    view
+    returns (uint256)
+  {
+    return 10000 * _reserveCurrencyAmountWithoutFee / (10000 - transactionFee);
   }
 }

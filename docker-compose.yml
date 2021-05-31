@@ -15,7 +15,7 @@ builder:
     - "./src/test:/marblegame/test"
 ganache:
   image: trufflesuite/ganache-cli:latest
-  command: ganache -p 8545 -h 0.0.0.0 --blockTime 5
+  command: ganache -p 8545 -h 0.0.0.0
   environment:
     SET_CONTAINER_TIMEZONE: 'True'
     CONTAINER_TIMEZONE: Europe/Prague
