@@ -26,6 +26,34 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   }
 
   /**
+  * @dev See {ERC20-transfer}.
+  * - adds trasfer only when contract is not paused 
+  */
+  function transfer(address recipient, uint256 amount) 
+    public 
+    virtual 
+    override 
+    whenNotPaused 
+    returns (bool) 
+  {
+    return super.transfer(recipient, amount);
+  }
+
+  /**
+  * @dev See {ERC20-transferFrom}.
+  * - adds trasferForm only when contract is not paused
+  */
+  function transferFrom(address from, address to, uint256 value) 
+    public 
+    virtual 
+    override 
+    whenNotPaused 
+    returns (bool) 
+  {
+    return super.transferFrom(from, to, value);
+  }
+
+  /**
   * @dev Allows address with granted MINTER_ROLE to mint a number of coins
   * @param _account Address where will minted coins appear
   * @param _amount Amount of coins to mint
