@@ -296,7 +296,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
 
   /**
-  * @dev Transforms given string to its numeric hash representation
+  * @dev Transforms given string lower case version to its numeric hash representation
   * @param _stringToNumericHash name or symbol to transfor to hash
   */
   function getNumericHashFromString(string memory _stringToNumericHash)
@@ -304,7 +304,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     pure
     returns(uint256 stringToNumericHash)
   {
-    return uint256(keccak256(abi.encodePacked(_stringToNumericHash)));
+    return uint256(keccak256(abi.encodePacked(StringUtils.transformToLowercase(_stringToNumericHash))));
   }
 
   /**
