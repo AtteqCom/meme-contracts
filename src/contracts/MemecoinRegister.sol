@@ -19,6 +19,10 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   string public constant ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET';
   string public constant ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE';
   string public constant ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE';
+  string public constant ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS';
+  string public constant ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS';
+  string public constant ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY';
+  string public constant ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY';
 
   ERC20 public memecoin;
   MTokenFactoryInterface public mTokenFactory;
@@ -166,7 +170,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   * @param _mTokenName Name of new MToken contract, lower-case should be unique in the register
   * @param _mTokenSymbol Symbol of new MToken contract, lower-case should be unique in the register
   */
-  function createMToken(string calldata _mTokenName, string calldata _mTokenSymbol)
+  function createMToken(string memory _mTokenName, string memory _mTokenSymbol)
     external
     override
   {
@@ -174,6 +178,13 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
     require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
     require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+    require(containsOnlyAsciiPrintableChars(_mTokenName), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
+    require(containsOnlyAsciiPrintableChars(_mTokenSymbol), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
+
+    _mTokenName = stripSpaceCharacters(_mTokenName);
+    require(bytes(_mTokenName).length > 0, ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY);
+    _mTokenSymbol = stripSpaceCharacters(_mTokenSymbol);
+    require(bytes(_mTokenSymbol).length > 0, ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
 
     // TODO check uniqueness of name 
     // TODO check uniqueness of symbol
@@ -237,6 +248,11 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     return uint256(keccak256(abi.encodePacked(_stringToNumericHash)));
   }
 
+  /**
+   * @dev Check whether given string contains only ascii chars with code between 32 and 126 (inclusively)
+   * @param _str a string to check
+   * @return containsOnlyAsciiPrintableChars true if the given string contains only allowed ascii chars, otherwise false
+   */
   function containsOnlyAsciiPrintableChars(string memory _str)
     public
     pure
@@ -286,6 +302,9 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     returns(string memory strippedStr)
   {
     bytes memory bStr = bytes(_str);
+    if (bStr.length == 0) {
+      return '';
+    }
 
     uint256 indexFirstNotSpaceCharacter = indexOfFirstNotSpaceCharacter(bStr);
     if (indexFirstNotSpaceCharacter == bStr.length) {
