@@ -7,41 +7,47 @@ contract("StringUtils", accounts => {
     this.stringUtilsTestContract = await StringUtilsTestContract.new();
   });
 
-  describe("StringUtils.stripSpaceCharacters() works correctly", async () => {
+  describe("StringUtils.stripWhitespace() works correctly", async () => {
     it("Does not change string with no spaces at beginning and end", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("Dodge Meme");
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("Dodge Meme");
       assert.equal(strippedStr, "Dodge Meme");
     });
 
     it("Strip at the beginning", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("   Dodge Meme");
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("   Dodge Meme");
       assert.equal(strippedStr, "Dodge Meme");
     });
 
     it("Strip at the end", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("Dodge Meme      ");
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("Dodge Meme      ");
       assert.equal(strippedStr, "Dodge Meme");
     });
 
     it("Strip both", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("              Dodge Meme      ");
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("              Dodge Meme      ");
       assert.equal(strippedStr, "Dodge Meme");
     });
 
     it("Does not strip in the middle", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("Dodge   Meme");
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("Dodge   Meme");
       assert.equal(strippedStr, "Dodge   Meme");
     });
 
     it("Strip a string with spaces only to an empty string. ", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("   ");
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("   ");
       assert.equal(strippedStr, "");
     });
 
-    it("Strip an empty string to an empty string. ", async () => {
-      let strippedStr = await this.stringUtilsTestContract.stripSpaceCharacters("");
+    it("Strip an empty string to an empty string.", async () => {
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace("");
       assert.equal(strippedStr, "");
     });
+
+    it("Strip other whitespace chars.", async () => {
+      let strippedStr = await this.stringUtilsTestContract.stripWhitespace(" \t\n \v\r\fDodge Meme \t\r\n\f\v     ");
+      assert.equal(strippedStr, "Dodge Meme");
+    });
+
   });
 
   describe("StringUtils.containsOnlyAsciiPrintableChars() works correctly", async () => {
@@ -50,22 +56,22 @@ contract("StringUtils", accounts => {
       assert.equal(onlyAscii, true);
     });
 
-    it("Not-printable ascii chars fails - char #31", async () => {
+    it("Not-printable ascii chars - char #31", async () => {
       let onlyAscii = await this.stringUtilsTestContract.containsOnlyAsciiPrintableChars("Dodge Meme " + String.fromCharCode(31));
       assert.equal(onlyAscii, false);
     });
 
-    it("Not-printable ascii chars fails - tabulator", async () => {
+    it("Not-printable ascii chars - tabulator", async () => {
       let onlyAscii = await this.stringUtilsTestContract.containsOnlyAsciiPrintableChars("Dodge\tMeme");
       assert.equal(onlyAscii, false);
     });
 
-    it("Not-printable ascii chars fails - tabulator", async () => {
+    it("Not-printable ascii chars - tabulator", async () => {
       let onlyAscii = await this.stringUtilsTestContract.containsOnlyAsciiPrintableChars("\t");
       assert.equal(onlyAscii, false);
     });
 
-    it("Not ASCII char fails", async () => {
+    it("Not ASCII char", async () => {
       let onlyAscii = await this.stringUtilsTestContract.containsOnlyAsciiPrintableChars("Dodge Meme á");
       assert.equal(onlyAscii, false);
     });

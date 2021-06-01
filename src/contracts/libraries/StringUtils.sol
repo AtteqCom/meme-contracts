@@ -48,10 +48,12 @@ library StringUtils {
   }
 
   /**
-   * @dev Remove ASCII space characters (char with ASCII code 32) from the beginning and end of the string
-   * @param _str string for stripping the spaces
+   * @dev Remove ASCII whitespace characters (char with ASCII code 9, 10, 11, 12, 13 or 32) from the beginning and end of the string.
+   * @param _str string for stripping the whitespaces
+   *
+   * Whitespace chars, see: https://en.wikipedia.org/wiki/Whitespace_character
    */
-  function stripSpaceCharacters(string memory _str)
+  function stripWhitespace(string memory _str)
     internal
     pure
     returns(string memory strippedStr)
@@ -87,7 +89,7 @@ library StringUtils {
   {
     uint256 firstNonWhitespaceCharacterIndex = 0;
     for (uint256 i = 0; i < _bStr.length; i++) {
-      if (uint8(_bStr[i]) != 32) {
+      if (!isWhitespaceAsciiCharCode(uint8(_bStr[i]))) {
         firstNonWhitespaceCharacterIndex = i;
         break;
       }
@@ -111,7 +113,7 @@ library StringUtils {
   {
     uint256 firstNotSpaceCharacterIndex = _bStr.length - 1;
     for (uint256 i = _bStr.length - 1; i >= 0; i--) {
-      if (uint8(_bStr[i]) != 32) {
+      if (!isWhitespaceAsciiCharCode(uint8(_bStr[i]))) {
         firstNotSpaceCharacterIndex = i;
         break;
       }
@@ -128,5 +130,20 @@ library StringUtils {
     } else {
       return firstNotSpaceCharacterIndex;
     }
+  }
+
+  function isWhitespaceAsciiCharCode(uint8 _code)
+    private
+    pure
+    returns(bool isWhitespace)
+  {
+    return 
+      // codes of all ASCII chars recognized as whitespace, source: https://en.wikipedia.org/wiki/Whitespace_character
+      _code == 9  // tabulator \t
+      || _code == 10  // newline \n
+      || _code == 11  // vertical tab \v
+      || _code == 12  // formfeed \f
+      || _code == 13  // carriage return \r
+      || _code == 32;  // space
   }
 }

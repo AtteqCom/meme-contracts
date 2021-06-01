@@ -303,9 +303,9 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     require(StringUtils.containsOnlyAsciiPrintableChars(_mTokenName), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
     require(StringUtils.containsOnlyAsciiPrintableChars(_mTokenSymbol), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
 
-    _mTokenName = StringUtils.stripSpaceCharacters(_mTokenName);
+    _mTokenName = StringUtils.stripWhitespace(_mTokenName);
     require(bytes(_mTokenName).length > 0, ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY);
-    _mTokenSymbol = StringUtils.stripSpaceCharacters(_mTokenSymbol);
+    _mTokenSymbol = StringUtils.stripWhitespace(_mTokenSymbol);
     require(bytes(_mTokenSymbol).length > 0, ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
 
     // pay owner price for mToken creation

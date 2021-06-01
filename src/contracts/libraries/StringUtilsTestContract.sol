@@ -21,11 +21,11 @@ contract StringUtilsTestContract {
     return StringUtils.transformToLowercase(_strToLowerSource);
   }
 
-  function stripSpaceCharacters(string memory _str)
+  function stripWhitespace(string memory _str)
     public
     pure
     returns(string memory strippedStr)
   {
-    return StringUtils.stripSpaceCharacters(_str);
+    return StringUtils.stripWhitespace(_str);
   }
 }
