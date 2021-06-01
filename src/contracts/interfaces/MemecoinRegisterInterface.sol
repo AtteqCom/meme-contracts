@@ -20,16 +20,18 @@ interface MemecoinRegisterInterface {
   function createMToken(
     string calldata _mTokenName, string calldata _mTokenSymbol
   )
-   external;
+   external
+   returns(uint256 index);
 
-  /**
+  /*
   * @dev Add new contract as registered one.
   * @param _mTokenContract Adds new contract to registration list.
-  */
+  
   function addMToken(
     ERC20 _mTokenContract
   )
    external;
+*/
 
   /**
   * @dev Add new contract as registered one.

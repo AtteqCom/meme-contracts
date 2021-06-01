@@ -11,6 +11,12 @@ import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.
 /// @dev This is used only for unit tests
 contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
 
+  struct MemecoinRegistration {
+    uint256 index;
+    address factoryAddress;
+    address creator;
+  }
+
   bytes32 public constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
 
   string public constant ERROR_MTOKEN_ADDRESS_IS_REQUIRED = 'ERROR_MTOKEN_ADDRESS_IS_REQUIRED';
@@ -19,6 +25,8 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   string public constant ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET';
   string public constant ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE';
   string public constant ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE';
+  string public constant ERROR_NAME_IS_TAKEN = 'ERROR_NAME_IS_TAKEN';
+  string public constant ERROR_SYMBOL_IS_TAKEN = 'ERROR_SYMBOL_IS_TAKEN';
 
   ERC20 public memecoin;
   MTokenFactoryInterface public mTokenFactory;
@@ -27,19 +35,20 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   * @dev holds symbolic mToken registration IDs mapped to mToken contract addresses
   * (ids) 0..n => address_0..address_n (mToken contract addresses)
   */
-  mapping(uint256 => address) public memecoinRegister;
+  mapping(address => MemecoinRegistration) public memecoinRegister;
+  address[] public memecoinRegisterIndex;
 
   /**
   * @dev helper index, maps numeric hashes of mToken contract names to symbolic mToken registration ids
   * mToken_hash_0..mToken_hash_n => 0..n
   */
-  mapping(uint256 => uint256) public memecoinRegisterIndex;
+  mapping(uint256 => address) public nameHashIndex;
 
   /**
   * @dev helper index, maps numeric hashes of mToken contract names to symbolic mToken registration ids
   * symbol_hash_0..symbol_hash_n => 0..n
   */
-  mapping(uint256 => uint256) public memecoinSymbolRegisterIndex;
+  mapping(uint256 => address) public symbolHashIndex;
 
   /**
   * @dev count of registered mToken contracts, or register Id of next regitered mToken contract
@@ -85,6 +94,22 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   * @param oldInitialSupply old amount of initial supply
   */
   event MTokenReserveCurrencyInititalSupplyChanged(uint256 newInitialSupply, uint256 oldInitialSupply);
+
+  /**
+  * @dev modifier Throws if called by any account other than the owner.
+  */
+  modifier onlyUniqueName(string memory _name) {
+    require(!isNameRegistered(_name), ERROR_NAME_IS_TAKEN);
+    _;
+  }
+
+  /**
+  * @dev modifier Throws if called by any account other than the owner.
+  */
+  modifier onlyUniqueSymbol(string memory _symbol) {
+    require(!isSymbolRegistered(_symbol), ERROR_SYMBOL_IS_TAKEN);
+    _;
+  }
 
   constructor() {
     _memecoinRegisterCount = 0;
@@ -161,6 +186,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     emit MTokenReserveCurrencyInititalSupplyChanged(mTokenReserveCurrencyInitialSupply, oldMTokenInitialReserveCurrencySupply);
   }
 
+
   /**
   * @dev Creates MToken contract after reserve currency transfer, caller has to add allowence to contract before calling.
   * @param _mTokenName Name of new MToken contract, lower-case should be unique in the register
@@ -169,48 +195,38 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   function createMToken(string calldata _mTokenName, string calldata _mTokenSymbol)
     external
     override
+    onlyUniqueName(_mTokenName)
+    onlyUniqueSymbol(_mTokenSymbol)
+    returns(uint256 index)
   {
     require(address(0) != address(memecoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
     require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
     require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
 
-    // TODO check uniqueness of name 
-    // TODO check uniqueness of symbol
-
     memecoin.transferFrom(msg.sender, owner(), mTokenCreationPrice);
 
     // create
     address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
 
+    uint256 numericHashOfTokenName = getNumericHashFromString(_mTokenName);
+    uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenSymbol);
+
+    memecoinRegisterIndex.push(mTokenAddress);
+    memecoinRegister[mTokenAddress] = MemecoinRegistration(_memecoinRegisterCount, address(mTokenFactory), msg.sender);
+    symbolHashIndex[numericHashOfTokenSymbolName] = mTokenAddress;
+    nameHashIndex[numericHashOfTokenName] = mTokenAddress;
+
+    _memecoinRegisterCount = memecoinRegisterIndex.length;
+
     // adds initial funds of reserveCurrency to mToken contract
     memecoin.transferFrom(msg.sender, address(mTokenAddress), mTokenReserveCurrencyInitialSupply);
 
     emit MTokenRegistered(mTokenAddress, mTokenCreationPrice, mTokenReserveCurrencyInitialSupply);
+
+    return _memecoinRegisterCount -1;
   }
   
-
-  /**
-  * @dev Adds newly created MToken contract to register. Can be call just by sender with MTOKEN_FACTORY_ROLE role granted.
-  * @param _mTokenContract ERC20 of new MToken contract
-  */
-  function addMToken(ERC20 _mTokenContract)
-    external
-    override
-  {
-    require(hasRole(MTOKEN_FACTORY_ROLE, msg.sender), ERROR_CALLER_IS_NOT_MTOKEN_FACTORY);
-    require(address(0) != address(_mTokenContract), ERROR_MTOKEN_ADDRESS_IS_REQUIRED);
-
-    uint256 numericHashOfTokenName = getNumericHashFromString(_mTokenContract.name());
-    uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenContract.symbol());
-
-    memecoinRegister[_memecoinRegisterCount] = address(_mTokenContract);
-    memecoinRegisterIndex[numericHashOfTokenName] = _memecoinRegisterCount;
-    memecoinSymbolRegisterIndex[numericHashOfTokenSymbolName] = _memecoinRegisterCount;
-
-    _memecoinRegisterCount = _memecoinRegisterCount +1;
-  }
-
 
   /**
   * @dev View returns count of registered MToken contracts  
@@ -222,6 +238,54 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     returns (uint256 mtokensRegisteredCount)
   {
     return _memecoinRegisterCount;
+  }
+
+  /**
+  * @dev Returns true if name is already registered
+  * @param _name name of mToken
+  */
+  function isNameRegistered(string memory _name)
+    public
+    view
+    returns (bool isRegistered)
+  {
+    if (memecoinRegisterIndex.length == 0) {
+      return false;
+    }
+
+    uint256 nameHash = getNumericHashFromString(_name);
+    address mTokenAddress = nameHashIndex[nameHash];
+
+    if (mTokenAddress == address(0)) {
+      return false;
+    }
+
+    ERC20 mToken = ERC20(nameHashIndex[nameHash]);
+    return getNumericHashFromString(mToken.name()) == nameHash;
+  }
+
+  /**
+  * @dev Returns true if name is already registered
+  * @param _symbol name of mToken
+  */
+  function isSymbolRegistered(string memory _symbol)
+    public
+    view
+    returns (bool isRegistered)
+  {
+    if (memecoinRegisterIndex.length == 0) {
+      return false;
+    }
+
+    uint256 symbolHash = getNumericHashFromString(_symbol);
+    address mTokenAddress = symbolHashIndex[symbolHash];
+
+    if (mTokenAddress == address(0)) {
+      return false;
+    }
+
+    ERC20 mToken = ERC20(symbolHashIndex[symbolHash]);
+    return getNumericHashFromString(mToken.symbol()) == symbolHash;
   }
 
 
@@ -248,7 +312,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     pure 
     returns (string memory strToLower) 
   {
-    bytes memory bStr = bytes(str);
+    bytes memory bStr = bytes(_strToLowerSource);
     bytes memory bLower = new bytes(bStr.length);
      for (uint i = 0; i < bStr.length; i++) {
       // Uppercase character...

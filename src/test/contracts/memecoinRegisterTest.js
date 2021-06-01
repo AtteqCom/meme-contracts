@@ -10,12 +10,26 @@ let MEMECOIN_DECIMALS = 18;
 
 const DODGDE_MTOKEN_NAME = 'DodgeMToken';
 const DODGDE_MTOKEN_SYMBOL = 'DGMT';
+const COOLPANDA_MTOKEN_NAME = 'COOLPANDA';
+const COOLPANDA_MTOKEN_SYMBOL = 'CLP';
 
 let TEN_AS_BN = (new BN(10));
 let MEMECOIN_DECIMALS_AS_BN = TEN_AS_BN.pow(new BN(18));
 let MTOKEN_CREATION_PRICE = (new BN(1e6)).mul(MEMECOIN_DECIMALS_AS_BN);
 let MTOKEN_INITIAL_SUPPLY = (new BN(1e3)).mul(MEMECOIN_DECIMALS_AS_BN);
+let ENOUGH_COINS_TO_CREATE_MTOKEN = MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY);
 
+const addFundsToActor = async (actor, value, coin, coinOwner, allowanceTo, valueAllowance) => {
+  await coin.transfer(actor, value, {from: coinOwner});
+
+  if (allowanceTo) {
+    await coin.increaseAllowance(this.memecoinRegister.address, value, { from: actor });
+  }
+}
+
+const increaseAllowence = async (actor, value, coin, allowanceTo) => {
+    await coin.increaseAllowance(this.memecoinRegister.address, value, { from: actor });
+}
 
 contract("MemecoinRegister", accounts => {
 
@@ -36,11 +50,14 @@ contract("MemecoinRegister", accounts => {
     await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
     this.initialReserveCurrencySupplyOfMToken = MTOKEN_INITIAL_SUPPLY;
 
+
     // sets actors
-    await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), { from: summerAsCorrectCreator });
-    await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), { from: mortyAsNotEnoughBalance });
-    await this.memecoin.transfer(mortyAsNotEnoughBalance,  MTOKEN_CREATION_PRICE.sub(new BN(1000)), {from: owner});
-    await this.memecoin.transfer(summerAsCorrectCreator,  MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), {from: owner});
+    await addFundsToActor(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN.sub(new BN(1000)), this.memecoin, owner);
+    await increaseAllowence(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN, this.memecoin, this.memecoinRegister.address);
+
+    await addFundsToActor(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, owner);
+    await increaseAllowence(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, this.memecoinRegister.address);
+    
   });
 
   describe("MemecoinRegister behavior", async() => {
@@ -49,7 +66,7 @@ contract("MemecoinRegister", accounts => {
         let ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = await this.memecoinRegister.ERROR_MEME_COIN_CONTRACT_IS_NOT_SET();
         await expectRevert(this.memecoinRegister.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
       });
-    
+
       it("Set Memecoin contract", async () => {
         let newMemecoinAddress = await this.memecoin.address;
         let currentMemecoinAddress = await this.memecoinRegister.memecoin();
@@ -105,8 +122,6 @@ contract("MemecoinRegister", accounts => {
           expectEvent.inLogs(logs, 'MTokenReserveCurrencyInititalSupplyChanged', { newInitialSupply: MTOKEN_INITIAL_SUPPLY, oldInitialSupply: currentMTokenInititalSupply});
     
           currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
-          console.log(MTOKEN_INITIAL_SUPPLY.toString())
-          console.log(currentMTokenInititalSupply.toString());
           assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
         });
     
@@ -123,7 +138,10 @@ contract("MemecoinRegister", accounts => {
         it("Creates new MToken", async () => {
           //  set up allowance first
           let { logs } = await this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegister(await this.memecoinRegister.totalRegistered() -1);
+          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
+          let memecoinRegistration = await this.memecoinRegister.memecoinRegister(lastAddress);
+
+          console.log(memecoinRegistration);
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
         });
 
@@ -134,22 +152,46 @@ contract("MemecoinRegister", accounts => {
           assert.equal(this.ownerBalanceBeforeTest.toString(), ownerAsCorrectCreatorBalance.sub(MTOKEN_CREATION_PRICE));
         });
 
-        it("Check index of register", async () => {
+        it("Check index of registered mToken", async () => {
           let lastRegisteredId = new BN(await this.memecoinRegister.totalRegistered()) -1;
-          let lastMTokenContractAddress = await this.memecoinRegister.memecoinRegister(lastRegisteredId);
+          let lastMTokenContractAddress = await this.memecoinRegister.memecoinRegisterIndex(lastRegisteredId);
           let mToken = await ERC20.at(lastMTokenContractAddress);
 
           let mTokenNameHash = await this.memecoinRegister.getNumericHashFromString(await mToken.name());
           let mTokenSymbolHash = await this.memecoinRegister.getNumericHashFromString(await mToken.symbol());
 
-          assert.equal(await this.memecoinRegister.memecoinRegisterIndex(mTokenNameHash), lastRegisteredId);
-          assert.equal(await this.memecoinRegister.memecoinSymbolRegisterIndex(mTokenSymbolHash), lastRegisteredId);
+          assert.equal(await this.memecoinRegister.nameHashIndex(mTokenNameHash), lastMTokenContractAddress);
+          assert.equal(await this.memecoinRegister.symbolHashIndex(mTokenSymbolHash), lastMTokenContractAddress);
         });
 
-        it("Reverts when caller is not in MTOKEN_FACTORY_ROLE role", async () => {
-          let ERROR_CALLER_IS_NOT_MTOKEN_FACTORY = await this.memecoinRegister.ERROR_CALLER_IS_NOT_MTOKEN_FACTORY();
-          await expectRevert(this.memecoinRegister.addMToken(await this.memecoin.address, {from: rickAsNotEnoughAllowance}), ERROR_CALLER_IS_NOT_MTOKEN_FACTORY);
+        it("Reverts name exists", async () => {
+          let ERROR_NAME_IS_TAKEN = await this.memecoinRegister.ERROR_NAME_IS_TAKEN();
+          await expectRevert(this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
         });
+
+        it("Reverts symbol exists", async () => {
+          let ERROR_SYMBOL_IS_TAKEN = await this.memecoinRegister.ERROR_SYMBOL_IS_TAKEN();
+          await expectRevert(this.memecoinRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+        });
+
+        it("Creates another cool MToken", async () => {
+          let { logs } = await this.memecoinRegister.createMToken(COOLPANDA_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
+          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
+          expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
+
+          let mToken = await ERC20.at(lastAddress);
+          assert.equal(await mToken.name(), COOLPANDA_MTOKEN_NAME);
+          assert.equal(await mToken.symbol(), COOLPANDA_MTOKEN_SYMBOL);
+        });
+      });
+    });
+
+    describe("Contract helpers", async() => {
+      it("Check to string to lower case functionality", async () => {
+        let upprecase = "ŘkdkjtiiiéÉddddL+š+š+ľ";
+        let lowercase = "řkdkjtiiiééddddL+š+š+ľ";
+
+        assert.equal(await this.memecoinRegister.transformToLowercase(upprecase), lowercase);
       });
     });
   });
