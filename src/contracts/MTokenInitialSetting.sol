@@ -24,7 +24,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
     uint256 initialSupply;
     uint16 fee;
     uint16 feeLimit;
-    uint256 reserveCurrencyWeight;
+    uint32 reserveCurrencyWeight;
     uint256 reserveCurrencyInitialSupply;
   }
 
@@ -35,7 +35,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
     uint256 _initialSupply,
     uint16 _fee,
     uint16 _feeLimit,
-    uint256 _reserveCurrencyWeight,
+    uint32 _reserveCurrencyWeight,
     uint256 _reserveCurrencyInitialSupply
   ) {
 
@@ -76,7 +76,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   * @param newWeight new weight
   * @param oldWeight old weight
   */
-  event ReserveCurrencyWeightChanged(uint256 newWeight, uint256 oldWeight);
+  event ReserveCurrencyWeightChanged(uint32 newWeight, uint32 oldWeight);
   
 
   /**
@@ -195,11 +195,11 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   * @dev Sets weight of reserve currency compared to mToken coins
   * @param _weight hit some heavy numbers !! :)
   */
-  function setReserveCurrencyWeight(uint256 _weight)
+  function setReserveCurrencyWeight(uint32 _weight)
     public
     onlyOwner
   {
-    uint256 oldReserveCurrencyWeight = mTokenSetting.reserveCurrencyWeight;
+    uint32 oldReserveCurrencyWeight = mTokenSetting.reserveCurrencyWeight;
 
     mTokenSetting.reserveCurrencyWeight = _weight;
 

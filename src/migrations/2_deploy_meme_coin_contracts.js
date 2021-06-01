@@ -2,7 +2,7 @@ const Memecoin = artifacts.require("./Memecoin.sol");
 
 const config = require('../config');
 
-
+// config.MEMECOIN_INITIAL_SUPPLY
 
 module.exports = async function(deployer) {
   console.log(`Migrate - creating Memecoin`);

@@ -3,12 +3,11 @@ const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
 const Memecoin = artifacts.require("./Memecoin.sol");
 const MToken = artifacts.require("./MToken.sol");
+const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
 
 
 const TOKEN_NAME = "TEST TOKEN";
 const TOKEN_SYMBOL = "TEST SYMBOL";
-const RESERVE_WEIGHT = 100;
-const INITIAL_TOTAL_SUPPLY = new BN(10000000);
 
 const MORTYs_1ST_INVESTMENT = new BN(1e6);
 const SECOND_FEE = 500;
@@ -25,22 +24,34 @@ contract("MTokenTest", accounts => {
     this.memecoin.transfer(summerAsInvestorWithoutAllowance, new BN(1e10), {from: owner});
     this.memecoin.transfer(jerryAsLoser, new BN(1e3), {from: owner});
 
+    this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
+
+    this.mTokenSetting = await this.mTokenInitialSetting.getMTokenSetting(); 
+
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
   });
 
   it("Create MToken", async () => {
+    console.log(`-----------------`); 
+    console.log(this.mTokenSetting);
+    console.log(`-----------------`);
+
     this.mToken = await MToken.new(
-      INITIAL_TOTAL_SUPPLY,
+      rickAsMTokenOwner,
+      this.mTokenSetting.initialSupply,
       TOKEN_NAME,
       TOKEN_SYMBOL,
-      rickAsMTokenOwner,
-      RESERVE_WEIGHT,
       this.memecoin.address,
-      this.bancor.address, {from: owner});
+      this.mTokenSetting.reserveCurrencyWeight,
+      this.mTokenSetting.fee,
+      this.mTokenSetting.feeLimit,
+      this.bancor.address, {from: owner}
+    );
 
     assert.equal(await this.mToken.name(), TOKEN_NAME);
     assert.equal(await this.mToken.symbol(), TOKEN_SYMBOL);
+    assert.equal(await this.mToken.totalSupply(), new BN(1e7));
   });
 
   describe("MToken behavior", () => {

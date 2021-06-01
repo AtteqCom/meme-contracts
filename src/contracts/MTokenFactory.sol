@@ -25,9 +25,6 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
   string public constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
   string public constant ERROR_MEME_COIN_REGISTER_NOT_SET = 'ERROR_MEME_COIN_REGISTER_NOT_SET';
 
-  uint32 public constant reserveCurrencyWeight = 100;
-  uint32 public constant initialTotalSupply = 1e8;
-
   MemecoinRegisterInterface public memecoinRegister;
   Memecoin public reserveCurrency;
   MTokenInitialSetting public mTokenInitialSetting;
@@ -86,13 +83,17 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
     require(address(0) != address(memecoinRegister), ERROR_MEME_COIN_REGISTER_NOT_SET);
     require(hasRole(MEME_COIN_REGISTER_ROLE, msg.sender), ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER);
   
+    MTokenInitialSetting.MTokenSetting memory mTokenSetting = mTokenInitialSetting.getMTokenInitialSetting();
+
     MToken mToken = new MToken(
-      initialTotalSupply,
+      owner(),
+      mTokenSetting.initialSupply,
       _mTokenName,
       _mTokenSymbol,
-      owner(),
-      reserveCurrencyWeight,
       reserveCurrency,
+      mTokenSetting.reserveCurrencyWeight,
+      mTokenSetting.fee,
+      mTokenSetting.feeLimit,
       bancorFormula
     );
 

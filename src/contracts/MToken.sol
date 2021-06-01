@@ -12,15 +12,6 @@ import {MTokenInterface} from "./interfaces/MTokenInterface.sol";
 /// @dev This is used only for unit tests
 contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
-  /**
-  * @dev Transaction fee limit.. limits fee to max 10% of reserveCurrency
-  */
-  uint16 public constant TRANSACTION_FEE_LIMIT = 1000;
-
-  uint16 public constant DEFAULT_TRANSACTION_FEE = 100;
-
-  uint16 public constant DEFAULT_INITIAL_SUPPLY = 100;
-
   string public constant ERROR_FEE_IS_ABOVE_LIMIT = 'ERROR_FEE_IS_ABOVE_LIMIT';
 
   string public constant ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL = 'ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL';
@@ -30,6 +21,11 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   * @dev Transaction fee applied to invest and sale prices where 1% is equal to 100. 100% equals to 10000
   */
   uint16 public transactionFee;
+
+  /**
+  * @dev Transaction fee limit.. limits fee to max 10% of reserveCurrency
+  */
+  uint16 public transactionFeeLimit;
 
 
   /**
@@ -50,25 +46,27 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   IBancorFormula public bancorFormula;
 
   constructor(
+    address _owner,
     uint256 _initialSupply,
     string memory _memeTokenName, 
     string memory _memeTokenSymbol,
-    address _owner,
-    uint32 _reserveWeight,
     ERC20 _reserveCurrency,
+    uint32 _reserveWeight,
+    uint16 _fee,
+    uint16 _feeLimit,
     IBancorFormula _formula) ERC20(_memeTokenName, _memeTokenSymbol)
   {
-    bancorFormula = _formula;
+    transferOwnership(_owner);
+
+    _mint(address(this), decimals() * _initialSupply);
+
     reserveCurrency = _reserveCurrency;
     reserveWeight = _reserveWeight;
-    transferOwnership(_owner);
-    transactionFee = DEFAULT_TRANSACTION_FEE;
 
-    if (_initialSupply > 0) {
-      _mint(address(this), decimals() * _initialSupply);  
-    } else {
-      _mint(address(this), decimals() * DEFAULT_INITIAL_SUPPLY);  
-    }
+    transactionFee = _fee;
+    transactionFeeLimit = _feeLimit;
+
+    bancorFormula = _formula;
   }
 
   /**
@@ -83,7 +81,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     onlyOwner
   {
 
-    require(TRANSACTION_FEE_LIMIT > _transactionFee, ERROR_FEE_IS_ABOVE_LIMIT);
+    require(transactionFeeLimit > _transactionFee, ERROR_FEE_IS_ABOVE_LIMIT);
     uint256 oldFee = transactionFee;
     transactionFee = _transactionFee;
 
