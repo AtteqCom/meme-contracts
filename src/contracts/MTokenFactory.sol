@@ -93,8 +93,6 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
     );
 
     address mTokenAddress = address(mToken);
-    memecoinRegister.addMToken(ERC20(mToken));
-
     emit MTokenCreated(mTokenAddress);
 
     return mTokenAddress;
