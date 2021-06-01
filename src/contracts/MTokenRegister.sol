@@ -6,14 +6,14 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
 import {MTokenInitialSettingInterface} from "./interfaces/MTokenInitialSettingInterface.sol";
-import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.sol";
+import {MTokenRegisterInterface} from "./interfaces/MTokenRegisterInterface.sol";
 import {StringUtils} from "./libraries/StringUtils.sol";
 
 
 
 /// @title ERC721 token
 /// @dev This is used only for unit tests
-contract MTokenRegister is Ownable, AccessControl, MemecoinRegisterInterface {
+contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
   struct MemecoinRegistration {
     uint256 index;

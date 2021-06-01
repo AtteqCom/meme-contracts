@@ -6,7 +6,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
-import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.sol";
+import {MTokenRegisterInterface} from "./interfaces/MTokenRegisterInterface.sol";
 import {IBancorFormula} from "./bancor/IBancorFormula.sol";
 import {Memecoin} from "./Memecoin.sol";
 import {MTokenInitialSetting} from "./MTokenInitialSetting.sol";
@@ -25,7 +25,7 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
   string public constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
   string public constant ERROR_MEME_COIN_REGISTER_NOT_SET = 'ERROR_MEME_COIN_REGISTER_NOT_SET';
 
-  MemecoinRegisterInterface public mTokenRegister;
+  MTokenRegisterInterface public mTokenRegister;
   Memecoin public reserveCurrency;
   MTokenInitialSetting public mTokenInitialSetting;
   IBancorFormula public bancorFormula;
@@ -51,7 +51,7 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
   * @dev Sets MTokenRegister contract to be able to add created MemeticTokenContract to register. This mth. removes and grants MEME_COIN_REGISTER_ROLE 
   * @param _memecoinRegister reference to MTokenRegister contract
   */
-  function setMemecoinRegsiter(MemecoinRegisterInterface _memecoinRegister) 
+  function setMemecoinRegsiter(MTokenRegisterInterface _memecoinRegister) 
     public 
     onlyOwner 
   {

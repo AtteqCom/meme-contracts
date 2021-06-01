@@ -10,7 +10,7 @@ import {MTokenFactoryInterface} from "./MTokenFactoryInterface.sol";
  * @title Marble Coin Register Interface
  * @dev describes all externaly accessible functions neccessery to run Marble Auctions
  */
-interface MemecoinRegisterInterface {
+interface MTokenRegisterInterface {
 
   /**
   * @dev Create mToken with provided name.
