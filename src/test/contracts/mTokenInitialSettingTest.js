@@ -17,10 +17,6 @@ contract("MTokenInitialSettingTest", accounts => {
   before(async () => {
     this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
-    console.log(`----------------`);
-    console.log(await this.mTokenInitialSetting.mTokenSetting());
-    console.log(`----------------`);
-    console.log(await this.mTokenInitialSetting.getMTokenInitialSetting());
     assert.equal(10, 10);
   });
 
@@ -45,15 +41,4 @@ contract("MTokenInitialSettingTest", accounts => {
     currentMTokenInititalSupply = await this.mTokenInitialSetting.getReserveCurrencyInitialSupply();
     assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
   });
-
-  it("Check", async () => {
-    console.log(`----------------`);
-    console.log(await this.mTokenInitialSetting.mTokenSetting());
-    console.log(`----------------`);
-    console.log(await this.mTokenInitialSetting.getMTokenInitialSetting());
-    assert.equal(10, 10);
-  });
-
-
-
 });

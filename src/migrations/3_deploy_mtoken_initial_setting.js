@@ -1,12 +1,14 @@
+const web3 = require('web3');
+const BN = web3.utils.BN;
 const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
-
 const config = require('../config');
 
-let MTOKEN_CREATION_PRICE = (new web3.utils.BN(1e6));
-let MTOKEN_INITIAL_SUPPLY = (new web3.utils.BN(1e3));
-//let MTOKEN_CREATION_PRICE = (new web3.utils.BN(1e6));
-//let MTOKEN_INITIAL_SUPPLY = (new web3.utils.BN(1e3));
-let TEN_AS_BN = (new web3.utils.BN(10));
+let ONE_COIN = (new BN(10)).pow(new BN(18));
+let MTOKEN_CREATION_PRICE = (new BN(config.MTOKEN_CREATION_PRICE)).mul(ONE_COIN);
+let MTOKEN_INITIAL_SUPPLY = (new BN(config.MTOKEN_INITIAL_SUPPLY)).mul(ONE_COIN);
+let MTOKEN_RESERVE_CURRENCY_INITIAL_SUPPLY = (new BN(config.MTOKEN_RESERVE_CURRENCY_INITIAL_SUPPLY)).mul(ONE_COIN);
+
+let TEN_AS_BN = (new BN(10));
 
 
 module.exports = async function(deployer) {
@@ -14,11 +16,11 @@ module.exports = async function(deployer) {
 
   await deployer.deploy(
     MTokenInitialSetting, 
-    config.MTOKEN_CREATION_PRICE, 
-    config.MTOKEN_INITIAL_SUPPLY, 
+    MTOKEN_CREATION_PRICE, 
+    MTOKEN_INITIAL_SUPPLY, 
     config.MTOKEN_FEE,
     config.MTOKEN_FEE_LIMIT,
     config.MTOKEN_RESERVE_CURRENCY_WEIGHT,
-    config.MTOKEN_RESERVE_CURRENCY_INITAL_SUPPLY
+    MTOKEN_RESERVE_CURRENCY_INITIAL_SUPPLY
   );
 };

@@ -33,7 +33,7 @@ const increaseAllowence = async (actor, value, coin, allowanceTo) => {
     await coin.increaseAllowance(this.memecoinRegister.address, value, { from: actor });
 }
 
-contract("MemecoinRegister", accounts => {
+contract("MemecoinRegisterTest", accounts => {
 
   const [owner, rickAsNotEnoughAllowance, mortyAsNotEnoughBalance, summerAsCorrectCreator, beth, jerry] = accounts;
 
@@ -102,8 +102,6 @@ contract("MemecoinRegister", accounts => {
         });
     
         it("Reverts when creator has not set enough allowance", async () => {
-          console.log(await this.memecoinRegister.getCreationTotalCosts());
-
           let ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = await this.memecoinRegister.ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE();
           await expectRevert(this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
         });

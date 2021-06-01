@@ -26,16 +26,13 @@ contract("MTokenTest", accounts => {
 
     this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
-    this.mTokenSetting = await this.mTokenInitialSetting.getMTokenSetting(); 
+    this.mTokenSetting = await this.mTokenInitialSetting.getMTokenInitialSetting(); 
 
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
   });
 
   it("Create MToken", async () => {
-    console.log(`-----------------`); 
-    console.log(this.mTokenSetting);
-    console.log(`-----------------`);
 
     this.mToken = await MToken.new(
       rickAsMTokenOwner,
@@ -51,7 +48,8 @@ contract("MTokenTest", accounts => {
 
     assert.equal(await this.mToken.name(), TOKEN_NAME);
     assert.equal(await this.mToken.symbol(), TOKEN_SYMBOL);
-    assert.equal(await this.mToken.totalSupply(), new BN(1e7));
+    assert(await this.mToken.totalSupply() > 0);
+    assert.equal((await this.mToken.totalSupply()).toString(), this.mTokenSetting.initialSupply.toString());
   });
 
   describe("MToken behavior", () => {
@@ -129,14 +127,14 @@ contract("MTokenTest", accounts => {
 
     it("Estimate the invest reward", async () => {
       let balanceBeforeInvestment = await this.mToken.balanceOf(mortyAsInvestor);
-      let amountToInvest = new BN(1e6 + 123);
+      let amountToInvest = new BN(1e6 + 140);
 
       let rewardEstimate = await this.mToken.calculateInvestReward(amountToInvest);
       await this.mToken.invest(amountToInvest, {from: mortyAsInvestor});
 
       let balanceAfterInvestment = await this.mToken.balanceOf(mortyAsInvestor);
 
-      assert.equal(balanceAfterInvestment - balanceBeforeInvestment, rewardEstimate);
+      assert.equal(balanceAfterInvestment.sub(balanceBeforeInvestment), rewardEstimate.toString());
     });
 
     it("Estimate the sell share reward", async () => {
@@ -151,7 +149,7 @@ contract("MTokenTest", accounts => {
 
       let balanceAfterSellingShare = await this.memecoin.balanceOf(mortyAsInvestor);
 
-      assert.equal(balanceAfterSellingShare - balanceBeforeSellingShare, rewardEstimate);
+      assert.equal(balanceAfterSellingShare.sub(balanceBeforeSellingShare), rewardEstimate.toString());
     });
 
   });
