@@ -79,6 +79,38 @@ contract("MemecoinRegister", accounts => {
         assert.equal(newTokenFactoryAddress, currentMTokenFactoryAddress);
       });
 
+      describe("MemecoinRegister.stripSpaceCharacters() works correctly", async () => {
+        it("Does not change string with no spaces at beginning and end", async () => {
+          let strippedStr = await this.memecoinRegister.stripSpaceCharacters("Dodge Meme");
+          assert.equal(strippedStr, "Dodge Meme");
+        });
+
+        it("Strip at the beginning", async () => {
+          let strippedStr = await this.memecoinRegister.stripSpaceCharacters("   Dodge Meme");
+          assert.equal(strippedStr, "Dodge Meme");
+        });
+
+        it("Strip at the end", async () => {
+          let strippedStr = await this.memecoinRegister.stripSpaceCharacters("Dodge Meme      ");
+          assert.equal(strippedStr, "Dodge Meme");
+        });
+
+        it("Strip both", async () => {
+          let strippedStr = await this.memecoinRegister.stripSpaceCharacters("              Dodge Meme      ");
+          assert.equal(strippedStr, "Dodge Meme");
+        });
+
+        it("Does not strip in the middle", async () => {
+          let strippedStr = await this.memecoinRegister.stripSpaceCharacters("Dodge   Meme");
+          assert.equal(strippedStr, "Dodge   Meme");
+        });
+
+        it("Strip a string with spaces only to an empty string. ", async () => {
+          let strippedStr = await this.memecoinRegister.stripSpaceCharacters("   ");
+          assert.equal(strippedStr, "");
+        });
+      });
+
       describe("MToken creation", async() => {
 
         before(async() => {
