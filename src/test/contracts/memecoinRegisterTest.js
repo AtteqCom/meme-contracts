@@ -6,8 +6,9 @@ const Memecoin = artifacts.require("./Memecoin.sol");
 const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
 const MToken = artifacts.require("./MToken.sol");
+const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
 
-let MEMECOIN_DECIMALS = 18;
+const config = require('../../config');
 
 const DODGDE_MTOKEN_NAME = 'DodgeMToken';
 const DODGDE_MTOKEN_SYMBOL = 'DGMT';
@@ -16,8 +17,8 @@ const COOLPANDA_MTOKEN_SYMBOL = 'CLP';
 
 let TEN_AS_BN = (new BN(10));
 let MEMECOIN_DECIMALS_AS_BN = TEN_AS_BN.pow(new BN(18));
-let MTOKEN_CREATION_PRICE = (new BN(1e6)).mul(MEMECOIN_DECIMALS_AS_BN);
-let MTOKEN_INITIAL_SUPPLY = (new BN(1e3)).mul(MEMECOIN_DECIMALS_AS_BN);
+let MTOKEN_CREATION_PRICE = (new BN(config.MTOKEN_CREATION_PRICE)).mul(MEMECOIN_DECIMALS_AS_BN);
+let MTOKEN_INITIAL_SUPPLY = (new BN(config.MTOKEN_INITIAL_SUPPLY)).mul(MEMECOIN_DECIMALS_AS_BN);
 let ENOUGH_COINS_TO_CREATE_MTOKEN = MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY);
 
 const addFundsToActor = async (actor, value, coin, coinOwner, allowanceTo, valueAllowance) => {
@@ -36,28 +37,25 @@ contract("MemecoinRegister", accounts => {
 
   const [owner, rickAsNotEnoughAllowance, mortyAsNotEnoughBalance, summerAsCorrectCreator, beth, jerry] = accounts;
 
-  let ownerBalanceBeforeEachTest = null;
-  let summerAsCorrectCreatorBalanceBeforeEachTest = null;
-
   before(async () => {
-    this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
-    this.memecoinRegister = await MemecoinRegister.new();
-
-    this.bancor = await BancorFormula.new();
-    await this.bancor.init();
-
-    this.mTokenFactory = await MTokenFactory.new(this.memecoin.address, this.bancor.address);
-
+    this.memecoin = await Memecoin.deployed();
+    this.mTokenFactory = await MTokenFactory.deployed();
+    this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
+    this.memecoinRegister = await MemecoinRegister.new(); 
     await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
-    this.initialReserveCurrencySupplyOfMToken = MTOKEN_INITIAL_SUPPLY;
+    await this.memecoinRegister.setMTokenInitialSetting(this.mTokenInitialSetting.address);
 
+    MTOKEN_CREATION_PRICE = await this.mTokenInitialSetting.getCreationPrice();
+    MTOKEN_INITIAL_SUPPLY = await this.mTokenInitialSetting.getReserveCurrencyInitialSupply();
+    ENOUGH_COINS_TO_CREATE_MTOKEN = MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY);
+
+    this.initialReserveCurrencySupplyOfMToken = MTOKEN_INITIAL_SUPPLY;
 
     await addFundsToActor(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN.sub(new BN(1000)), this.memecoin, owner);
     await increaseAllowence(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN, this.memecoin, this.memecoinRegister.address);
 
     await addFundsToActor(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, owner);
-    await increaseAllowence(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, this.memecoinRegister.address);
-    
+    await increaseAllowence(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, this.memecoinRegister.address);    
   });
 
   describe("MemecoinRegister behavior", async() => {
@@ -174,41 +172,10 @@ contract("MemecoinRegister", accounts => {
           this.ownerBalanceBeforeTest = await this.memecoin.balanceOf(owner);
           this.summerAsCorrectCreatorBalanceBeforeTest = await this.memecoin.balanceOf(summerAsCorrectCreator);
         });
-
-        it("Sets MToken creation Price", async () => {
-          let currentMTokenCreationPrice = await this.memecoinRegister.mTokenCreationPrice();
-    
-          let { logs } = await this.memecoinRegister.setMTokenCreationPrice(MTOKEN_CREATION_PRICE);
-          expectEvent.inLogs(logs, 'MTokenCreationPriceChanged', { newPrice: MTOKEN_CREATION_PRICE, oldPrice: currentMTokenCreationPrice});
-    
-          currentMTokenCreationPrice = await this.memecoinRegister.mTokenCreationPrice();
-    
-          assert.equal(MTOKEN_CREATION_PRICE.toString(), currentMTokenCreationPrice);
-        });
-
-        it("Sets MToken initial supply of reserve currency", async () => {
-          
-          let currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
-    
-          let { logs } = await this.memecoinRegister.setMTokenReserveCurrencyInititalSupply(MTOKEN_INITIAL_SUPPLY);
-          expectEvent.inLogs(logs, 'MTokenReserveCurrencyInititalSupplyChanged', { newInitialSupply: MTOKEN_INITIAL_SUPPLY, oldInitialSupply: currentMTokenInititalSupply});
-    
-          currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
-          assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
-        });
-
-        it("Sets MToken initial supply of reserve currency", async () => {
-          
-          let currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
-    
-          let { logs } = await this.memecoinRegister.setMTokenReserveCurrencyInititalSupply(MTOKEN_INITIAL_SUPPLY);
-          expectEvent.inLogs(logs, 'MTokenReserveCurrencyInititalSupplyChanged', { newInitialSupply: MTOKEN_INITIAL_SUPPLY, oldInitialSupply: currentMTokenInititalSupply});
-    
-          currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
-          assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
-        });
     
         it("Reverts when creator has not set enough allowance", async () => {
+          console.log(await this.memecoinRegister.getCreationTotalCosts());
+
           let ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = await this.memecoinRegister.ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE();
           await expectRevert(this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
         });

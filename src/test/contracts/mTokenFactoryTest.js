@@ -3,7 +3,9 @@ const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
 const Memecoin = artifacts.require("./Memecoin.sol");
 const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
+const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
+
 
 const timeOfCreation = Date.now();
 
@@ -14,11 +16,12 @@ contract("MTokenFactoryTest", accounts => {
   before(async () => {
     this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
     this.memecoinRegister = await MemecoinRegister.new();
+    this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
 
-    this.mTokenFactory = await MTokenFactory.new(this.memecoin.address, this.bancor.address);
+    this.mTokenFactory = await MTokenFactory.new(this.memecoin.address, this.mTokenInitialSetting.address, this.bancor.address);
   });
 
   it("Checks revert when Meme Coin Register is not set", async () => {

@@ -9,7 +9,9 @@ import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
 import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.sol";
 import {IBancorFormula} from "./bancor/IBancorFormula.sol";
 import {Memecoin} from "./Memecoin.sol";
+import {MTokenInitialSetting} from "./MTokenInitialSetting.sol";
 import {MToken} from "./MToken.sol";
+
 
 
 /**
@@ -28,6 +30,7 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
 
   MemecoinRegisterInterface public memecoinRegister;
   Memecoin public reserveCurrency;
+  MTokenInitialSetting public mTokenInitialSetting;
   IBancorFormula public bancorFormula;
 
   /**
@@ -37,12 +40,13 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
   */
   event MemecoinRegisterChanged(address newMemecoinRegisterAddress, address oldMemecoinRegisterAddress);
 
-  constructor(Memecoin _reserveCurrency, IBancorFormula _bancorFormula) {
+  constructor(Memecoin _reserveCurrency, MTokenInitialSetting _mTokenInitialSetting,  IBancorFormula _bancorFormula) {
     // Grant the contract deployer the default admin role: it will be able
     // to grant and revoke any roles
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
     reserveCurrency = _reserveCurrency;
+    mTokenInitialSetting = _mTokenInitialSetting;
     bancorFormula = _bancorFormula;
   }
 

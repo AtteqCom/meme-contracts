@@ -5,7 +5,9 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
+import {MTokenInitialSettingInterface} from "./interfaces/MTokenInitialSettingInterface.sol";
 import {MemecoinRegisterInterface} from "./interfaces/MemecoinRegisterInterface.sol";
+
 
 /// @title ERC721 token
 /// @dev This is used only for unit tests
@@ -17,23 +19,6 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     address creator;
   }
 
-  /** 
-  * @dev 
-  * @param mTokenCreationPrice Price of mToken creation/registration
-  * @param mTokenInitialSupply Amount of initial supply of newly created
-  * @param mTokenInitialFee initial fee to set for newly created mToken
-  * @param mTokenInitialFeeLimit initial fee limit to set for newly created mToken
-  * @param mTokenReserveCurrencyInitialSupply Amount of reserve currency to be transfered to newly created contract as initial reserve currency supply  
-  * @param reserveCurrencyWeight weight of reserve currency compared to created mTokens
-  */
-  struct MTokenSetting {
-    uint256 mTokenCreationPrice;
-    uint256 mTokenInitialSupply;
-    uint16 mTokenInitialFee;
-    uint16 mTokenInitialFeeLimit;
-    uint256 reserveCurrencyWeight;
-    uint256 mTokenReserveCurrencyInitialSupply;
-  }
 
   bytes32 public constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
 
@@ -59,6 +44,12 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   * @dev contract creating specific instance/version of mToken contract
   */
   MTokenFactoryInterface public mTokenFactory;
+
+
+  /**
+  * @dev contract creating specific instance/version of mToken contract
+  */
+  MTokenInitialSettingInterface public mTokenInitialSetting;
  
   /**
   * @dev holds symbolic mToken registration IDs mapped to mToken contract addresses
@@ -78,8 +69,6 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   */
   mapping(uint256 => address) public symbolHashIndex;
 
-
- 
   /**
   * @dev Event emited when a new MTokenFactory contract is set
   * @param newMTokenFactory Address of the new MTokenFactory address
@@ -96,46 +85,17 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   event ReserveCurrencyChanged(address newReserveCurrency, address oldReserveCurrency);
 
   /**
-  * @dev Event emited when MToken creation price change
-  * @param newPrice new price of MToken creation
-  * @param oldPrice old price of MToken creation
+  * @dev Event emited when a new MTokenSetting is set
+  * @param newMTokenInitialSetting Address of the new MTokeSetting address
+  * @param oldMTokenInitialSetting Address of the old MTokeSetting address
   */
-  event MTokenCreationPriceChanged(uint256 newPrice, uint256 oldPrice);
-
-  /**
-  * @dev Event emited when MToken initial reserve currency changed
-  * @param newInitialSupplyOfReserveCurrency new amount of initial supply of reserve currency
-  * @param oldInitialSupplyOfReserveCurrency old amount of initial supply of reserve currency
-  */
-  event MTokenReserveCurrencyInititalSupplyChanged(uint256 newInitialSupplyOfReserveCurrency, uint256 oldInitialSupplyOfReserveCurrency);
-
-  /**
-  * @dev Event emited when MToken initial reserve currency changed
-  * @param newInitialSupply new amount of initial supply
-  * @param oldInitialSupply old amount of initial supply
-  */
-  event MTokenInitialSupplyChanged(uint256 newInitialSupply, uint256 oldInitialSupply);
-
-  /**
-  * @dev Event emited when MToken initial reserve currency changed
-  * @param newInitialSupply new amount of initial supply
-  * @param oldInitialSupply old amount of initial supply
-  */
-  event MTokenInititalSupplyChanged(uint256 newInitialSupply, uint256 oldInitialSupply);
+  event MTokenInitialSettingChanged(address newMTokenInitialSetting, address oldMTokenInitialSetting);
 
   /**
   * @dev modifier Throws if called by any account other than the owner.
   */
   modifier onlyUniqueName(string memory _name) {
     require(!isNameRegistered(_name), ERROR_NAME_IS_TAKEN);
-    _;
-  }
-
-  /**
-  * @dev modifier Throws if called by any account other than the owner.
-  */
-  modifier onlyUniqueSymbol(string memory _symbol) {
-    require(!isSymbolRegistered(_symbol), ERROR_SYMBOL_IS_TAKEN);
     _;
   }
 
@@ -191,95 +151,23 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     emit MTokenFactoryChanged(newMTokenFactoryAddress, oldMTokenFactoryAddress);
   }
 
+
+
   /**
-  * @dev Sets new price for creation MToken contracts
-  * @param _price new price for MToken creation
+  * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
+  * @param _mTokenInitialSetting Address of new MTokenFactory contract
   */
-  function setMTokenCreationPrice(uint256 _price)
+  function setMTokenInitialSetting(MTokenInitialSettingInterface _mTokenInitialSetting)
     public
     onlyOwner 
   {
-    uint256 oldPrice = mTokenCreationPrice;
+    address oldMTokenInitialSetting = address(mTokenInitialSetting);
 
-    mTokenCreationPrice = _price;
+    mTokenInitialSetting = _mTokenInitialSetting;
 
-    emit MTokenCreationPriceChanged(mTokenCreationPrice, oldPrice);
+    emit MTokenInitialSettingChanged(address(mTokenInitialSetting), oldMTokenInitialSetting);
   }
 
-  /**
-  * @dev Sets initial supply of reseve currency transfered to newly created mToken.
-  * @param _mTokenReserveCurrencyInitialSupply amount of reserve currency as initial supply
-  */
-  function setMTokenReserveCurrencyInititalSupply(uint256 _mTokenReserveCurrencyInitialSupply)
-    public
-    onlyOwner 
-  {
-    uint256 oldMTokenInitialReserveCurrencySupply = mTokenReserveCurrencyInitialSupply;
-
-    mTokenReserveCurrencyInitialSupply = _mTokenReserveCurrencyInitialSupply;
-
-    emit MTokenReserveCurrencyInititalSupplyChanged(mTokenReserveCurrencyInitialSupply, oldMTokenInitialReserveCurrencySupply);
-  }
-
-  /**
-  * @dev Sets initial supply of newly created MToken contract.
-  * @param _mTokenInitialSupply amount of initial supply
-  */
-  function setMTokenInititalSupply(uint256 _mTokenInitialSupply)
-    public
-    onlyOwner
-  {
-    uint256 oldMTokenInitialSupply = mTokenInitialSupply;
-
-    mTokenInitialSupply = _mTokenInitialSupply;
-
-    emit MTokenInititalSupplyChanged(mTokenInitialSupply, oldMTokenInitialSupply);
-  }
-
-  /**
-  * @dev Sets mToken initial invest/sale fee.
-  * @param _fee initial fee of newly created mToken
-  */
-  function setMTokenInitialFee(uint16 _fee)
-    public
-    onlyOwner
-  {
-    uint16 oldFee = mTokenInitialFee;
-
-    mTokenInitialFee = _fee;
-
-    emit MTokenInitialFeeChanged(mTokenInitialFee, oldFee);
-  }
-
-  /**
-  * @dev Sets mToken initial invest/sale fee limit.
-  * @param _feeLimit initial fee of newly created mToken
-  */
-  function setMTokenInitialFeeLimit(uint16 _feeLimit)
-    public
-    onlyOwner
-  {
-    uint16 oldFeeLimit = mTokenInitialFeeLimit;
-
-    mTokenInitialFeeLimit = _feeLimit;
-
-    emit MTokenInitialFeeLimitChanged(mTokenInitialFeeLimit, oldFeeLimit);
-  }
-
-  /**
-  * @dev Sets weight of reserve currency compared to mToken coins
-  * @param _weight hit some heavy numbers !! :)
-  */
-  function setReserveCurrencyWeight(uint256 _weight)
-    public
-    onlyOwner
-  {
-    uint256 oldReserveCurrencyWeight = reserveCurrencyWeight;
-
-    reserveCurrencyWeight = _weight;
-
-    emit ReserveCurrencyChanged(reserveCurrencyWeight, oldReserveCurrencyWeight);
-  }
 
 
   /**
@@ -296,8 +184,8 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   {
     require(address(0) != address(memecoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
-    require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
-    require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+    require(_hasCreatorCorrectAllowance(msg.sender), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
+    require(_hasCreatorEnoughBalance(msg.sender), ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
     require(containsOnlyAsciiPrintableChars(_mTokenName), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
     require(containsOnlyAsciiPrintableChars(_mTokenSymbol), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
 
@@ -306,8 +194,11 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     _mTokenSymbol = stripSpaceCharacters(_mTokenSymbol);
     require(bytes(_mTokenSymbol).length > 0, ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
 
+    uint256 reserveCurrencyInitialSupply = mTokenInitialSetting.getReserveCurrencyInitialSupply();
+    uint256 creationPrice = mTokenInitialSetting.getCreationPrice();
+
     // pay owner price for mToken creation
-    memecoin.transferFrom(msg.sender, owner(), mTokenCreationPrice);
+    memecoin.transferFrom(msg.sender, owner(), creationPrice);
 
     // create
     address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
@@ -322,9 +213,9 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     nameHashIndex[numericHashOfTokenName] = mTokenAddress;
 
     // adds initial funds of reserveCurrency to mToken contract
-    memecoin.transferFrom(msg.sender, address(mTokenAddress), mTokenReserveCurrencyInitialSupply);
+    memecoin.transferFrom(msg.sender, address(mTokenAddress), reserveCurrencyInitialSupply);
 
-    emit MTokenRegistered(mTokenAddress, mTokenCreationPrice, mTokenReserveCurrencyInitialSupply);
+    emit MTokenRegistered(mTokenAddress, creationPrice, reserveCurrencyInitialSupply);
 
     return memecoinRegisterIndex.length -1;
   }
@@ -390,6 +281,17 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     return getNumericHashFromString(mToken.symbol()) == symbolHash;
   }
 
+  /**
+   * @dev Total cost of MToken creation
+   */
+  function getCreationTotalCosts()
+    public
+    view
+    returns(uint256 result)
+  {
+    return mTokenInitialSetting.getCreationPrice() + mTokenInitialSetting.getReserveCurrencyInitialSupply();
+  }
+
 
   /**
   * @dev Transforms given string to its numeric hash representation
@@ -406,12 +308,12 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   /**
    * @dev Check whether given string contains only ascii chars with code between 32 and 126 (inclusively)
    * @param _str a string to check
-   * @return containsOnlyAsciiPrintableChars true if the given string contains only allowed ascii chars, otherwise false
+   * @return _containsOnlyAsciiPrintableChars true if the given string contains only allowed ascii chars, otherwise false
    */
   function containsOnlyAsciiPrintableChars(string memory _str)
     public
     pure
-    returns(bool containsOnlyAsciiPrintableChars)
+    returns(bool _containsOnlyAsciiPrintableChars)
   {
     bytes memory bStr = bytes(_str);
     for (uint i = 0; i < bStr.length; i++) {
@@ -501,7 +403,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     }
   }
 
-    /**
+  /**
    * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
    */
   function indexOfFirstNotSpaceCharacterFromEnd(bytes memory _bStr)
@@ -528,5 +430,27 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     } else {
       return firstNotSpaceCharacterIndex;
     }
+  }
+
+  /**
+   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
+   */
+  function _hasCreatorCorrectAllowance(address creator)
+    private
+    view
+    returns(bool result)
+  {
+    return memecoin.allowance(creator, address(this)) >= getCreationTotalCosts();
+  }
+
+  /**
+   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
+   */
+  function _hasCreatorEnoughBalance(address creator)
+    private
+    view
+    returns(bool result)
+  {
+    return memecoin.balanceOf(creator) >= getCreationTotalCosts();
   }
 }
