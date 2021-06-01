@@ -25,12 +25,12 @@ const addFundsToActor = async (actor, value, coin, coinOwner, allowanceTo, value
   await coin.transfer(actor, value, {from: coinOwner});
 
   if (allowanceTo) {
-    await coin.increaseAllowance(this.memecoinRegister.address, value, { from: actor });
+    await coin.increaseAllowance(this.mTokenRegister.address, value, { from: actor });
   }
 }
 
 const increaseAllowence = async (actor, value, coin, allowanceTo) => {
-    await coin.increaseAllowance(this.memecoinRegister.address, value, { from: actor });
+    await coin.increaseAllowance(this.mTokenRegister.address, value, { from: actor });
 }
 
 contract("MemecoinRegisterTest", accounts => {
@@ -41,9 +41,9 @@ contract("MemecoinRegisterTest", accounts => {
     this.memecoin = await Memecoin.deployed();
     this.mTokenFactory = await MTokenFactory.deployed();
     this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
-    this.memecoinRegister = await MTokenRegister.new(); 
-    await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
-    await this.memecoinRegister.setMTokenInitialSetting(this.mTokenInitialSetting.address);
+    this.mTokenRegister = await MTokenRegister.new(); 
+    await this.mTokenFactory.setMemecoinRegsiter(this.mTokenRegister.address);
+    await this.mTokenRegister.setMTokenInitialSetting(this.mTokenInitialSetting.address);
 
     MTOKEN_CREATION_PRICE = await this.mTokenInitialSetting.getCreationPrice();
     MTOKEN_INITIAL_SUPPLY = await this.mTokenInitialSetting.getReserveCurrencyInitialSupply();
@@ -52,44 +52,44 @@ contract("MemecoinRegisterTest", accounts => {
     this.initialReserveCurrencySupplyOfMToken = MTOKEN_INITIAL_SUPPLY;
 
     await addFundsToActor(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN.sub(new BN(1000)), this.memecoin, owner);
-    await increaseAllowence(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN, this.memecoin, this.memecoinRegister.address);
+    await increaseAllowence(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN, this.memecoin, this.mTokenRegister.address);
 
     await addFundsToActor(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, owner);
-    await increaseAllowence(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, this.memecoinRegister.address);    
+    await increaseAllowence(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, this.mTokenRegister.address);    
   });
 
   describe("MTokenRegister behavior", async() => {
     describe("Set related contracts", async() => {
       it("Reverts when Memecoin is not set.", async () => {
-        let ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = await this.memecoinRegister.ERROR_MEME_COIN_CONTRACT_IS_NOT_SET();
-        await expectRevert(this.memecoinRegister.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
+        let ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = await this.mTokenRegister.ERROR_MEME_COIN_CONTRACT_IS_NOT_SET();
+        await expectRevert(this.mTokenRegister.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
       });
 
       it("Set Memecoin contract", async () => {
         let newMemecoinAddress = await this.memecoin.address;
-        let currentMemecoinAddress = await this.memecoinRegister.memecoin();
+        let currentMemecoinAddress = await this.mTokenRegister.memecoin();
     
-        const { logs } = await this.memecoinRegister.setReserveCurrency(newMemecoinAddress);
+        const { logs } = await this.mTokenRegister.setReserveCurrency(newMemecoinAddress);
         expectEvent.inLogs(logs, 'ReserveCurrencyChanged', { newReserveCurrency: newMemecoinAddress, oldReserveCurrency: currentMemecoinAddress});
     
-        currentMemecoinAddress = await this.memecoinRegister.memecoin();
+        currentMemecoinAddress = await this.mTokenRegister.memecoin();
     
         assert.equal(newMemecoinAddress, currentMemecoinAddress);
       });
     
       it("Reverts when MTokenFactory is not set", async () => {
-        let ERROR_FACTORY_CONTRACT_IS_NOT_SET = await this.memecoinRegister.ERROR_FACTORY_CONTRACT_IS_NOT_SET();
-        await expectRevert(this.memecoinRegister.createMToken('DodgeMToken', 'DMT'), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
+        let ERROR_FACTORY_CONTRACT_IS_NOT_SET = await this.mTokenRegister.ERROR_FACTORY_CONTRACT_IS_NOT_SET();
+        await expectRevert(this.mTokenRegister.createMToken('DodgeMToken', 'DMT'), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
       });
     
       it("Set MTokenFactory contract", async () => {
         let newTokenFactoryAddress = await this.mTokenFactory.address;
-        let currentMTokenFactoryAddress = await this.memecoinRegister.mTokenFactory();
+        let currentMTokenFactoryAddress = await this.mTokenRegister.mTokenFactory();
     
-        const { logs } = await this.memecoinRegister.setMTokenFactory(newTokenFactoryAddress);
+        const { logs } = await this.mTokenRegister.setMTokenFactory(newTokenFactoryAddress);
         expectEvent.inLogs(logs, 'MTokenFactoryChanged', { newMTokenFactory: newTokenFactoryAddress, oldMTokenFactory: currentMTokenFactoryAddress});
     
-        currentMTokenFactoryAddress = await this.memecoinRegister.mTokenFactory();
+        currentMTokenFactoryAddress = await this.mTokenRegister.mTokenFactory();
     
         assert.equal(newTokenFactoryAddress, currentMTokenFactoryAddress);
       });
@@ -102,19 +102,19 @@ contract("MemecoinRegisterTest", accounts => {
         });
     
         it("Reverts when creator has not set enough allowance", async () => {
-          let ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = await this.memecoinRegister.ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE();
-          await expectRevert(this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
+          let ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = await this.mTokenRegister.ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE();
+          await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
         });
 
         it("Reverts when creator has not enough balance", async () => {
-          let ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = await this.memecoinRegister.ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE();
-          await expectRevert(this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: mortyAsNotEnoughBalance}), ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+          let ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = await this.mTokenRegister.ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE();
+          await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: mortyAsNotEnoughBalance}), ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
         });
     
         it("Creates new MToken", async () => {
           //  set up allowance first
-          let { logs } = await this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
+          let { logs } = await this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
+          let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
 
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
         });
@@ -127,30 +127,30 @@ contract("MemecoinRegisterTest", accounts => {
         });
 
         it("Check index of registered mToken", async () => {
-          let lastRegisteredId = new BN(await this.memecoinRegister.totalRegistered()) -1;
-          let lastMTokenContractAddress = await this.memecoinRegister.memecoinRegisterIndex(lastRegisteredId);
+          let lastRegisteredId = new BN(await this.mTokenRegister.totalRegistered()) -1;
+          let lastMTokenContractAddress = await this.mTokenRegister.memecoinRegisterIndex(lastRegisteredId);
           let mToken = await ERC20.at(lastMTokenContractAddress);
 
-          let mTokenNameHash = await this.memecoinRegister.getNumericHashFromString(await mToken.name());
-          let mTokenSymbolHash = await this.memecoinRegister.getNumericHashFromString(await mToken.symbol());
+          let mTokenNameHash = await this.mTokenRegister.getNumericHashFromString(await mToken.name());
+          let mTokenSymbolHash = await this.mTokenRegister.getNumericHashFromString(await mToken.symbol());
 
-          assert.equal(await this.memecoinRegister.nameHashIndex(mTokenNameHash), lastMTokenContractAddress);
-          assert.equal(await this.memecoinRegister.symbolHashIndex(mTokenSymbolHash), lastMTokenContractAddress);
+          assert.equal(await this.mTokenRegister.nameHashIndex(mTokenNameHash), lastMTokenContractAddress);
+          assert.equal(await this.mTokenRegister.symbolHashIndex(mTokenSymbolHash), lastMTokenContractAddress);
         });
 
         it("Reverts name exists", async () => {
-          let ERROR_NAME_IS_TAKEN = await this.memecoinRegister.ERROR_NAME_IS_TAKEN();
-          await expectRevert(this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
+          let ERROR_NAME_IS_TAKEN = await this.mTokenRegister.ERROR_NAME_IS_TAKEN();
+          await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
         });
 
         it("Reverts symbol exists", async () => {
-          let ERROR_SYMBOL_IS_TAKEN = await this.memecoinRegister.ERROR_SYMBOL_IS_TAKEN();
-          await expectRevert(this.memecoinRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+          let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
+          await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
         });
 
         it("Creates another cool MToken", async () => {
-          let { logs } = await this.memecoinRegister.createMToken(COOLPANDA_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
+          let { logs } = await this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
+          let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
 
           let mToken = await ERC20.at(lastAddress);
@@ -163,38 +163,38 @@ contract("MemecoinRegisterTest", accounts => {
 
         beforeEach(async() => {
           await this.memecoin.transfer(summerAsCorrectCreator,  MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), {from: owner});
-          await this.memecoin.increaseAllowance(this.memecoinRegister.address, MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), { from: summerAsCorrectCreator });
+          await this.memecoin.increaseAllowance(this.mTokenRegister.address, MTOKEN_CREATION_PRICE.add(MTOKEN_INITIAL_SUPPLY), { from: summerAsCorrectCreator });
         });
 
         it("MToken name and symbol valid", async () => {
-          let { logs } = await this.memecoinRegister.createMToken("Dodge Meme", "DGMXXXX", {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
+          let { logs } = await this.mTokenRegister.createMToken("Dodge Meme", "DGMXXXX", {from: summerAsCorrectCreator});
+          let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
         });
 
         it("MToken name invalid and symbol valid", async () => {
-          let ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = await this.memecoinRegister.ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS();
-          await expectRevert(this.memecoinRegister.createMToken("Dodge\tMeme 2", "DGMXXXX2", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
+          let ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = await this.mTokenRegister.ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS();
+          await expectRevert(this.mTokenRegister.createMToken("Dodge\tMeme 2", "DGMXXXX2", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
         });
 
         it("MToken name empty and symbol valid", async () => {
-          let ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = await this.memecoinRegister.ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY();
-          await expectRevert(this.memecoinRegister.createMToken("", "DGMXXXX3", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY);
+          let ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = await this.mTokenRegister.ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY();
+          await expectRevert(this.mTokenRegister.createMToken("", "DGMXXXX3", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY);
         });
 
         it("MToken name valid and symbol invalid", async () => {
-          let ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = await this.memecoinRegister.ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS();
-          await expectRevert(this.memecoinRegister.createMToken("Dodge Meme 4  ", "DGMXXXX\t4", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
+          let ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = await this.mTokenRegister.ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS();
+          await expectRevert(this.mTokenRegister.createMToken("Dodge Meme 4  ", "DGMXXXX\t4", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
         });
 
         it("MToken name valid and symbol empty", async () => {
-          let ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = await this.memecoinRegister.ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY();
-          await expectRevert(this.memecoinRegister.createMToken("Dodge Meme 5", "  ", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
+          let ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = await this.mTokenRegister.ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY();
+          await expectRevert(this.mTokenRegister.createMToken("Dodge Meme 5", "  ", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
         });
 
         it("MToken name and symbol are correctly stripped", async () => {
-          await this.memecoinRegister.createMToken("   Dodge Meme 6     ", "   DGMXXXX6  ", {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
+          await this.mTokenRegister.createMToken("   Dodge Meme 6     ", "   DGMXXXX6  ", {from: summerAsCorrectCreator});
+          let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
           let mToken = await MToken.at(lastAddress);
 
           let name = await mToken.name();

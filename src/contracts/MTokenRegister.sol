@@ -57,7 +57,7 @@ contract MTokenRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   * @dev holds symbolic mToken registration IDs mapped to mToken contract addresses
   * (address) 0..n => MemecoinRegistration (mToken contract addresses)
   */
-  mapping(address => MemecoinRegistration) public memecoinRegister;
+  mapping(address => MemecoinRegistration) public mTokenRegister;
   address[] public memecoinRegisterIndex;
 
   /**
@@ -210,7 +210,7 @@ contract MTokenRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenSymbol);
 
     memecoinRegisterIndex.push(mTokenAddress);
-    memecoinRegister[mTokenAddress] = MemecoinRegistration(memecoinRegisterIndex.length, address(mTokenFactory), msg.sender);
+    mTokenRegister[mTokenAddress] = MemecoinRegistration(memecoinRegisterIndex.length, address(mTokenFactory), msg.sender);
     symbolHashIndex[numericHashOfTokenSymbolName] = mTokenAddress;
     nameHashIndex[numericHashOfTokenName] = mTokenAddress;
 

@@ -11,11 +11,11 @@ module.exports = async function(deployer) {
 
   await deployer.deploy(MTokenRegister);
 
-  let memecoinRegister = await MTokenRegister.deployed();
+  let mTokenRegister = await MTokenRegister.deployed();
 
-  await memecoinRegister.setReserveCurrency(memecoin.address);
+  await mTokenRegister.setReserveCurrency(memecoin.address);
 
-  await memecoinRegister.setMTokenInitialSetting(mTokenInitialSetting.address);
+  await mTokenRegister.setMTokenInitialSetting(mTokenInitialSetting.address);
 
   
 };

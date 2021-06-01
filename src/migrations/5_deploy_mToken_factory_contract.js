@@ -10,7 +10,7 @@ module.exports = async function(deployer) {
   console.log(`Migrate - creating MTokenFactory`);
 
   let memecoin = await Memecoin.deployed();
-  let memecoinRegister = await MTokenRegister.deployed();
+  let mTokenRegister = await MTokenRegister.deployed();
   let mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
   await deployer.deploy(BancorFormula);
@@ -21,6 +21,6 @@ module.exports = async function(deployer) {
 
   let mTokenFactory = await MTokenFactory.deployed(); 
 
-  await mTokenFactory.setMemecoinRegsiter(memecoinRegister.address);
-  await memecoinRegister.setMTokenFactory(mTokenFactory.address);
+  await mTokenFactory.setMemecoinRegsiter(mTokenRegister.address);
+  await mTokenRegister.setMTokenFactory(mTokenFactory.address);
 };

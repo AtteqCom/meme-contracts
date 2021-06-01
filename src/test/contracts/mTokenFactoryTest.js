@@ -15,7 +15,7 @@ contract("MTokenFactoryTest", accounts => {
 
   before(async () => {
     this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
-    this.memecoinRegister = await MTokenRegister.new();
+    this.mTokenRegister = await MTokenRegister.new();
     this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
     this.bancor = await BancorFormula.new();
@@ -30,14 +30,14 @@ contract("MTokenFactoryTest", accounts => {
   });
 
   it("Sets MTokenRegister Contract", async () => {
-    let _memecoinRegisterAddress = await this.mTokenFactory.memecoinRegister();
+    let _memecoinRegisterAddress = await this.mTokenFactory.mTokenRegister();
 
-    const { logs } = await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
-    expectEvent.inLogs(logs, 'MemecoinRegisterChanged', { newMemecoinRegisterAddress: this.memecoinRegister.address, oldMemecoinRegisterAddress: _memecoinRegisterAddress });
+    const { logs } = await this.mTokenFactory.setMemecoinRegsiter(this.mTokenRegister.address);
+    expectEvent.inLogs(logs, 'MemecoinRegisterChanged', { newMemecoinRegisterAddress: this.mTokenRegister.address, oldMemecoinRegisterAddress: _memecoinRegisterAddress });
 
-    _memecoinRegisterAddress = await this.mTokenFactory.memecoinRegister();
+    _memecoinRegisterAddress = await this.mTokenFactory.mTokenRegister();
 
-    assert.equal(this.memecoinRegister.address, _memecoinRegisterAddress);
+    assert.equal(this.mTokenRegister.address, _memecoinRegisterAddress);
   });
 
   it("Only Meme Coin Register contract as caller can create MToken", async () => {
