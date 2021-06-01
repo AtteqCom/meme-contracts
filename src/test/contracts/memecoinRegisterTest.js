@@ -52,7 +52,6 @@ contract("MemecoinRegister", accounts => {
     this.initialReserveCurrencySupplyOfMToken = MTOKEN_INITIAL_SUPPLY;
 
 
-    // sets actors
     await addFundsToActor(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN.sub(new BN(1000)), this.memecoin, owner);
     await increaseAllowence(mortyAsNotEnoughBalance, ENOUGH_COINS_TO_CREATE_MTOKEN, this.memecoin, this.memecoinRegister.address);
 
@@ -125,6 +124,17 @@ contract("MemecoinRegister", accounts => {
           currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
           assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
         });
+
+        it("Sets MToken initial supply of reserve currency", async () => {
+          
+          let currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
+    
+          let { logs } = await this.memecoinRegister.setMTokenReserveCurrencyInititalSupply(MTOKEN_INITIAL_SUPPLY);
+          expectEvent.inLogs(logs, 'MTokenReserveCurrencyInititalSupplyChanged', { newInitialSupply: MTOKEN_INITIAL_SUPPLY, oldInitialSupply: currentMTokenInititalSupply});
+    
+          currentMTokenInititalSupply = await this.memecoinRegister.mTokenReserveCurrencyInitialSupply();
+          assert.equal(MTOKEN_INITIAL_SUPPLY.toString(), currentMTokenInititalSupply);
+        });
     
         it("Reverts when creator has not set enough allowance", async () => {
           let ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = await this.memecoinRegister.ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE();
@@ -140,9 +150,7 @@ contract("MemecoinRegister", accounts => {
           //  set up allowance first
           let { logs } = await this.memecoinRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
           let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
-          let memecoinRegistration = await this.memecoinRegister.memecoinRegister(lastAddress);
 
-          console.log(memecoinRegistration);
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
         });
 
