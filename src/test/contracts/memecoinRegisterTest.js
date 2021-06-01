@@ -119,7 +119,7 @@ contract("MemecoinRegister", accounts => {
 
       describe("MemecoinRegister.containsOnlyAsciiPrintableChars() works correctly", async () => {
         it("Printable ascii chars (i.e. from 32 to 126) are ok", async () => {
-          let onlyAscii = await this.memecoinRegister.containsOnlyAsciiPrintableChars(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
+          let onlyAscii = await this.memecoinRegister.containsOnlyAsciiPrintableChars(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
           assert.equal(onlyAscii, true);
         });
 
@@ -142,6 +142,14 @@ contract("MemecoinRegister", accounts => {
           let onlyAscii = await this.memecoinRegister.containsOnlyAsciiPrintableChars("Dodge Meme á");
           assert.equal(onlyAscii, false);
         });
+      });
+
+      describe("MemecoinRegister.transformToLowercase() works correctly", async () => {
+        it("Printable ascii chars (i.e. from 32 to 126) are ok", async () => {
+          let lowerCasedStr = await this.memecoinRegister.transformToLowercase(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
+          assert.equal(lowerCasedStr, " !\"#$%&'()*+,-./0123456789:;<=>?@abcdefghijklmnopqrstuvwxyz[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
+        });
+
       });
 
       describe("MToken creation", async() => {

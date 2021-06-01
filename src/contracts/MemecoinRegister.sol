@@ -278,7 +278,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     pure 
     returns (string memory strToLower) 
   {
-    bytes memory bStr = bytes(strToLower);
+    bytes memory bStr = bytes(_strToLowerSource);
     bytes memory bLower = new bytes(bStr.length);
      for (uint i = 0; i < bStr.length; i++) {
       // Uppercase character...
