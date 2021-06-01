@@ -1,5 +1,5 @@
 const Memecoin = artifacts.require("./Memecoin.sol");
-const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
+const MTokenRegister = artifacts.require("./MTokenRegister.sol");
 const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
 
 
@@ -9,9 +9,9 @@ module.exports = async function(deployer) {
   let memecoin = await Memecoin.deployed();
   let mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
-  await deployer.deploy(MemecoinRegister);
+  await deployer.deploy(MTokenRegister);
 
-  let memecoinRegister = await MemecoinRegister.deployed();
+  let memecoinRegister = await MTokenRegister.deployed();
 
   await memecoinRegister.setReserveCurrency(memecoin.address);
 

@@ -1,5 +1,5 @@
 const Memecoin = artifacts.require("./Memecoin.sol");
-const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
+const MTokenRegister = artifacts.require("./MTokenRegister.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
 const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
@@ -10,7 +10,7 @@ module.exports = async function(deployer) {
   console.log(`Migrate - creating MTokenFactory`);
 
   let memecoin = await Memecoin.deployed();
-  let memecoinRegister = await MemecoinRegister.deployed();
+  let memecoinRegister = await MTokenRegister.deployed();
   let mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
   await deployer.deploy(BancorFormula);

@@ -3,7 +3,7 @@ const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20.sol")
 
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
 const Memecoin = artifacts.require("./Memecoin.sol");
-const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
+const MTokenRegister = artifacts.require("./MTokenRegister.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
 const MToken = artifacts.require("./MToken.sol");
 const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
@@ -41,7 +41,7 @@ contract("MemecoinRegisterTest", accounts => {
     this.memecoin = await Memecoin.deployed();
     this.mTokenFactory = await MTokenFactory.deployed();
     this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
-    this.memecoinRegister = await MemecoinRegister.new(); 
+    this.memecoinRegister = await MTokenRegister.new(); 
     await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);
     await this.memecoinRegister.setMTokenInitialSetting(this.mTokenInitialSetting.address);
 
@@ -58,7 +58,7 @@ contract("MemecoinRegisterTest", accounts => {
     await increaseAllowence(summerAsCorrectCreator, ENOUGH_COINS_TO_CREATE_MTOKEN.mul(new BN(3)), this.memecoin, this.memecoinRegister.address);    
   });
 
-  describe("MemecoinRegister behavior", async() => {
+  describe("MTokenRegister behavior", async() => {
     describe("Set related contracts", async() => {
       it("Reverts when Memecoin is not set.", async () => {
         let ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = await this.memecoinRegister.ERROR_MEME_COIN_CONTRACT_IS_NOT_SET();

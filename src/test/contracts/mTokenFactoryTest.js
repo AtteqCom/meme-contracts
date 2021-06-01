@@ -2,7 +2,7 @@ const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test
 
 const BancorFormula = artifacts.require("./bancor/BancorFormula.sol");
 const Memecoin = artifacts.require("./Memecoin.sol");
-const MemecoinRegister = artifacts.require("./MemecoinRegister.sol");
+const MTokenRegister = artifacts.require("./MTokenRegister.sol");
 const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
 const MTokenFactory = artifacts.require("./MTokenFactory.sol");
 
@@ -15,7 +15,7 @@ contract("MTokenFactoryTest", accounts => {
 
   before(async () => {
     this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
-    this.memecoinRegister = await MemecoinRegister.new();
+    this.memecoinRegister = await MTokenRegister.new();
     this.mTokenInitialSetting = await MTokenInitialSetting.deployed();
 
     this.bancor = await BancorFormula.new();
@@ -29,7 +29,7 @@ contract("MTokenFactoryTest", accounts => {
     await expectRevert(this.mTokenFactory.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_REGISTER_NOT_SET);
   });
 
-  it("Sets MemecoinRegister Contract", async () => {
+  it("Sets MTokenRegister Contract", async () => {
     let _memecoinRegisterAddress = await this.mTokenFactory.memecoinRegister();
 
     const { logs } = await this.mTokenFactory.setMemecoinRegsiter(this.memecoinRegister.address);

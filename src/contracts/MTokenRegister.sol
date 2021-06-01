@@ -13,7 +13,7 @@ import {StringUtils} from "./libraries/StringUtils.sol";
 
 /// @title ERC721 token
 /// @dev This is used only for unit tests
-contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
+contract MTokenRegister is Ownable, AccessControl, MemecoinRegisterInterface {
 
   struct MemecoinRegistration {
     uint256 index;

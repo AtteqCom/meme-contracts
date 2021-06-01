@@ -25,15 +25,15 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
   string public constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
   string public constant ERROR_MEME_COIN_REGISTER_NOT_SET = 'ERROR_MEME_COIN_REGISTER_NOT_SET';
 
-  MemecoinRegisterInterface public memecoinRegister;
+  MemecoinRegisterInterface public mTokenRegister;
   Memecoin public reserveCurrency;
   MTokenInitialSetting public mTokenInitialSetting;
   IBancorFormula public bancorFormula;
 
   /**
-  * @dev Event emited when a new MemecoinRegister contract is set
-  * @param newMemecoinRegisterAddress Address of the new MemecoinRegister address
-  * @param oldMemecoinRegisterAddress Address of the old MemecoinRegister address
+  * @dev Event emited when a new MTokenRegister contract is set
+  * @param newMemecoinRegisterAddress Address of the new MTokenRegister address
+  * @param oldMemecoinRegisterAddress Address of the old MTokenRegister address
   */
   event MemecoinRegisterChanged(address newMemecoinRegisterAddress, address oldMemecoinRegisterAddress);
 
@@ -48,14 +48,14 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
   }
 
   /**
-  * @dev Sets MemecoinRegister contract to be able to add created MemeticTokenContract to register. This mth. removes and grants MEME_COIN_REGISTER_ROLE 
-  * @param _memecoinRegister reference to MemecoinRegister contract
+  * @dev Sets MTokenRegister contract to be able to add created MemeticTokenContract to register. This mth. removes and grants MEME_COIN_REGISTER_ROLE 
+  * @param _memecoinRegister reference to MTokenRegister contract
   */
   function setMemecoinRegsiter(MemecoinRegisterInterface _memecoinRegister) 
     public 
     onlyOwner 
   {
-    address oldMemecoinAddress = address(memecoinRegister);
+    address oldMemecoinAddress = address(mTokenRegister);
     address newMemecoinAddress = address(_memecoinRegister);
 
     // remove previouse factory
@@ -64,14 +64,14 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
     }
 
     grantRole(MEME_COIN_REGISTER_ROLE, newMemecoinAddress);
-    memecoinRegister = _memecoinRegister;
+    mTokenRegister = _memecoinRegister;
 
     emit MemecoinRegisterChanged(newMemecoinAddress, oldMemecoinAddress);
   }
 
   /**
-  * @dev Allows to caller with granted MEME_COIN_REGISTER_ROLE to create new MemeticToken Contract (MToken) and adds its reference to MemecoinRegister. 
-  * Caller should check validity of token name and symbol. Mth. reverts if MemecoinRegister contract is not set.
+  * @dev Allows to caller with granted MEME_COIN_REGISTER_ROLE to create new MemeticToken Contract (MToken) and adds its reference to MTokenRegister. 
+  * Caller should check validity of token name and symbol. Mth. reverts if MTokenRegister contract is not set.
   * @param _mTokenName name of new MToken contract
   * @param _mTokenSymbol symbol of new MToken contract
   */
@@ -80,7 +80,7 @@ contract MTokenFactory is Ownable, AccessControl, MTokenFactoryInterface {
     override
     returns(address mTokenContract) 
   {
-    require(address(0) != address(memecoinRegister), ERROR_MEME_COIN_REGISTER_NOT_SET);
+    require(address(0) != address(mTokenRegister), ERROR_MEME_COIN_REGISTER_NOT_SET);
     require(hasRole(MEME_COIN_REGISTER_ROLE, msg.sender), ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER);
   
     MTokenInitialSetting.MTokenSetting memory mTokenSetting = mTokenInitialSetting.getMTokenInitialSetting();
