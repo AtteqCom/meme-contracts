@@ -267,7 +267,7 @@ contract("MemecoinRegister", accounts => {
 
         it("MToken name and symbol valid", async () => {
           let { logs } = await this.memecoinRegister.createMToken("Dodge Meme", "DGMXXXX", {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegister(await this.memecoinRegister.totalRegistered() -1);
+          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
           expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
         });
 
@@ -293,7 +293,7 @@ contract("MemecoinRegister", accounts => {
 
         it("MToken name and symbol are correctly stripped", async () => {
           await this.memecoinRegister.createMToken("   Dodge Meme 6     ", "   DGMXXXX6  ", {from: summerAsCorrectCreator});
-          let lastAddress = await this.memecoinRegister.memecoinRegister(await this.memecoinRegister.totalRegistered() -1);
+          let lastAddress = await this.memecoinRegister.memecoinRegisterIndex(await this.memecoinRegister.totalRegistered() -1);
           let mToken = await MToken.at(lastAddress);
 
           let name = await mToken.name();
@@ -303,15 +303,6 @@ contract("MemecoinRegister", accounts => {
           assert.equal(symbol, "DGMXXXX6");
         });
 
-      });
-    });
-
-    describe("Contract helpers", async() => {
-      it("Check to string to lower case functionality", async () => {
-        let upprecase = "ŘkdkjtiiiéÉddddL+š+š+ľ";
-        let lowercase = "řkdkjtiiiééddddL+š+š+ľ";
-
-        assert.equal(await this.memecoinRegister.transformToLowercase(upprecase), lowercase);
       });
     });
   });
