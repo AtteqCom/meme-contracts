@@ -96,7 +96,7 @@ library StringUtils {
     }
 
     // this condition is met when we never entered the if-body in the for loop above, i.e. the entire string contains only space chars
-    if (firstNonWhitespaceCharacterIndex == 0 && uint8(_bStr[0]) == 32) {
+    if (firstNonWhitespaceCharacterIndex == 0 && isWhitespaceAsciiCharCode(uint8(_bStr[0]))) {
       return _bStr.length;
     } else {
       return firstNonWhitespaceCharacterIndex;
@@ -125,7 +125,7 @@ library StringUtils {
     }
 
     // this condition is met when we never entered the if-body in the for loop above, i.e. the entire string contains only space chars
-    if (firstNotSpaceCharacterIndex == _bStr.length - 1 && uint8(_bStr[_bStr.length - 1]) == 32) {
+    if (firstNotSpaceCharacterIndex == _bStr.length - 1 && isWhitespaceAsciiCharCode(uint8(_bStr[_bStr.length - 1]))) {
       return _bStr.length;
     } else {
       return firstNotSpaceCharacterIndex;
