@@ -116,5 +116,32 @@ contract("MTokenTest", accounts => {
       assert(!await this.mToken.paused());
     });
 
+    it("Estimate the invest reward", async () => {
+      let balanceBeforeInvestment = await this.mToken.balanceOf(mortyAsInvestor);
+      let amountToInvest = new BN(1e6 + 123);
+
+      let rewardEstimate = await this.mToken.calculateInvestReward(amountToInvest);
+      await this.mToken.invest(amountToInvest, {from: mortyAsInvestor});
+
+      let balanceAfterInvestment = await this.mToken.balanceOf(mortyAsInvestor);
+
+      assert.equal(balanceAfterInvestment - balanceBeforeInvestment, rewardEstimate);
+    });
+
+    it("Estimate the sell share reward", async () => {
+      await this.mToken.invest(new BN(1e10), {from: mortyAsInvestor});
+      await this.mToken.invest(new BN(147), {from: jerryAsLoser});
+
+      let balanceBeforeSellingShare = await this.memecoin.balanceOf(mortyAsInvestor);
+      let amountToSell = new BN(1e2 + 123);
+
+      let rewardEstimate = await this.mToken.calculateSellShareReward(amountToSell);
+      await this.mToken.sellShare(amountToSell, {from: mortyAsInvestor});
+
+      let balanceAfterSellingShare = await this.memecoin.balanceOf(mortyAsInvestor);
+
+      assert.equal(balanceAfterSellingShare - balanceBeforeSellingShare, rewardEstimate);
+    });
+
   });
 });

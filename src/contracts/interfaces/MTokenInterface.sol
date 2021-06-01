@@ -21,7 +21,7 @@ interface MTokenInterface is IERC20 {
 
   /**
   * @dev Amount of Main Currency is invested for mTokens
-  * @param _amountOfReserveCurrency amount of mTokens
+  * @param _amountOfReserveCurrency amount of Main Currency to invest
   */
   function invest(
     uint256 _amountOfReserveCurrency
@@ -36,6 +36,28 @@ interface MTokenInterface is IERC20 {
     uint256 _amountOfTokens
   )
     external;
+
+  /**
+   * @dev Calculate amount of mTokens obtained by investing the given amount of Main Currency.
+   * @param _amountOfReserveCurrency amount of Main Currency to invest
+   */
+  function calculateInvestReward(
+    uint256 _amountOfReserveCurrency
+  )
+    external
+    view
+    returns (uint256);
+
+  /**
+   * @dev Calculate amount of Main Currency obtained from transaction call to sellShare method.
+   * @param _amountOfMTokens amount of mTokens to sell
+   */
+  function calculateSellShareReward(
+    uint256 _amountOfMTokens
+  )
+    external
+    view
+    returns (uint256);
 
   /**
   * @dev Stops minting of coins.. should be activated in case of bonding curve evaluation is lower than price of token in external markets

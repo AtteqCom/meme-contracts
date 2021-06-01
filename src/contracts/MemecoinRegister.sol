@@ -43,6 +43,10 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   string public constant ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET';
   string public constant ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE';
   string public constant ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE';
+  string public constant ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS';
+  string public constant ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS';
+  string public constant ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY';
+  string public constant ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY';
   string public constant ERROR_NAME_IS_TAKEN = 'ERROR_NAME_IS_TAKEN';
   string public constant ERROR_SYMBOL_IS_TAKEN = 'ERROR_SYMBOL_IS_TAKEN';
 
@@ -283,7 +287,7 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
   * @param _mTokenName Name of new MToken contract, lower-case should be unique in the register
   * @param _mTokenSymbol Symbol of new MToken contract, lower-case should be unique in the register
   */
-  function createMToken(string calldata _mTokenName, string calldata _mTokenSymbol)
+  function createMToken(string memory _mTokenName, string memory _mTokenSymbol)
     external
     override
     onlyUniqueName(_mTokenName)
@@ -294,6 +298,13 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
     require(memecoin.allowance(msg.sender, address(this)) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
     require(memecoin.balanceOf(msg.sender) >= mTokenCreationPrice + mTokenReserveCurrencyInitialSupply, ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+    require(containsOnlyAsciiPrintableChars(_mTokenName), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
+    require(containsOnlyAsciiPrintableChars(_mTokenSymbol), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
+
+    _mTokenName = stripSpaceCharacters(_mTokenName);
+    require(bytes(_mTokenName).length > 0, ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY);
+    _mTokenSymbol = stripSpaceCharacters(_mTokenSymbol);
+    require(bytes(_mTokenSymbol).length > 0, ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
 
     // pay owner price for mToken creation
     memecoin.transferFrom(msg.sender, owner(), mTokenCreationPrice);
@@ -392,7 +403,26 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     return uint256(keccak256(abi.encodePacked(_stringToNumericHash)));
   }
 
-  
+  /**
+   * @dev Check whether given string contains only ascii chars with code between 32 and 126 (inclusively)
+   * @param _str a string to check
+   * @return containsOnlyAsciiPrintableChars true if the given string contains only allowed ascii chars, otherwise false
+   */
+  function containsOnlyAsciiPrintableChars(string memory _str)
+    public
+    pure
+    returns(bool containsOnlyAsciiPrintableChars)
+  {
+    bytes memory bStr = bytes(_str);
+    for (uint i = 0; i < bStr.length; i++) {
+      if (uint8(bStr[i]) >= 127 || uint8(bStr[i]) < 32) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   /**
   * @dev Transforms given string to its lowercase
   * source from https://gist.github.com/thomasmaclean/276cb6e824e48b7ca4372b194ec05b97#gistcomment-3310610
@@ -416,5 +446,87 @@ contract MemecoinRegister is Ownable, AccessControl, MemecoinRegisterInterface {
     }
     return string(bLower);
   }
-  
+
+  /**
+   * @dev Remove ASCII space characters (char with ASCII code 32) from the beginning and end of the string
+   * @param _str string for stripping the spaces
+   */
+  function stripSpaceCharacters(string memory _str)
+    public
+    pure
+    returns(string memory strippedStr)
+  {
+    bytes memory bStr = bytes(_str);
+    if (bStr.length == 0) {
+      return '';
+    }
+
+    uint256 indexFirstNotSpaceCharacter = indexOfFirstNotSpaceCharacter(bStr);
+    if (indexFirstNotSpaceCharacter == bStr.length) {
+      return '';
+    }
+
+    uint256 indexFirstNotSpaceCharacterFromEnd = indexOfFirstNotSpaceCharacterFromEnd(bStr);
+
+    uint256 bStrippedStrLength = indexFirstNotSpaceCharacterFromEnd - indexFirstNotSpaceCharacter + 1;
+    bytes memory bStrippedStr = new bytes(bStrippedStrLength);
+    for (uint256 i = indexFirstNotSpaceCharacter; i <= indexFirstNotSpaceCharacterFromEnd; i++) {
+      bStrippedStr[i - indexFirstNotSpaceCharacter] = bStr[i];
+    }
+
+    return string(bStrippedStr);
+  }
+
+  /**
+   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
+   */
+  function indexOfFirstNotSpaceCharacter(bytes memory _bStr)
+    private
+    pure
+    returns(uint256 index)
+  {
+    uint256 firstNonWhitespaceCharacterIndex = 0;
+    for (uint256 i = 0; i < _bStr.length; i++) {
+      if (uint8(_bStr[i]) != 32) {
+        firstNonWhitespaceCharacterIndex = i;
+        break;
+      }
+    }
+
+    // this condition is met when we never entered the if-body in the for loop above, i.e. the entire string contains only space chars
+    if (firstNonWhitespaceCharacterIndex == 0 && uint8(_bStr[0]) == 32) {
+      return _bStr.length;
+    } else {
+      return firstNonWhitespaceCharacterIndex;
+    }
+  }
+
+    /**
+   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
+   */
+  function indexOfFirstNotSpaceCharacterFromEnd(bytes memory _bStr)
+    private
+    pure
+    returns(uint256 index)
+  {
+    uint256 firstNotSpaceCharacterIndex = _bStr.length - 1;
+    for (uint256 i = _bStr.length - 1; i >= 0; i--) {
+      if (uint8(_bStr[i]) != 32) {
+        firstNotSpaceCharacterIndex = i;
+        break;
+      }
+
+      // manually interrupting the for-cycle at the end so we do not get overflow to negative values (i is unsigned int)
+      if (i == 0) {
+        break;
+      }
+    }
+
+    // this condition is met when we never entered the if-body in the for loop above, i.e. the entire string contains only space chars
+    if (firstNotSpaceCharacterIndex == _bStr.length - 1 && uint8(_bStr[_bStr.length - 1]) == 32) {
+      return _bStr.length;
+    } else {
+      return firstNotSpaceCharacterIndex;
+    }
+  }
 }
