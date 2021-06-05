@@ -59,7 +59,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _amount Amount of coins to mint
   */
   function mint(address _account, uint256 _amount) 
-    public 
+    external
     whenNotPaused
   {
     require(hasRole(MINTER_ROLE, msg.sender), "Address is not minter");
@@ -74,7 +74,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _amount Amount of coins to burn
   */
   function burn(uint256 _amount) 
-    public 
+    external 
     whenNotPaused
   {    
     _burn(msg.sender, _amount);
