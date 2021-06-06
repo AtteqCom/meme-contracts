@@ -15,8 +15,6 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
 
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-  bool private _supplycapped = false;
-
   constructor(uint256 _totalSupply, string memory _memeTokenName, string memory _memeTokenSymbol) ERC20(_memeTokenName, _memeTokenSymbol)
   {
     uint256 mtc = 1e18;
@@ -59,12 +57,11 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _amount Amount of coins to mint
   */
   function mint(address _account, uint256 _amount) 
-    public 
+    external
     whenNotPaused
   {
     require(hasRole(MINTER_ROLE, msg.sender), "Address is not minter");
     require(totalSupply() + _amount > totalSupply(), "Increase in supply would cause overflow.");
-    require(!isSupplyCapped(), "Supply has been capped.");
     
     _mint(_account, _amount);
   }
@@ -74,34 +71,10 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _amount Amount of coins to burn
   */
   function burn(uint256 _amount) 
-    public 
+    external 
     whenNotPaused
   {    
     _burn(msg.sender, _amount);
-  }
-
-  /**
-  * @dev The contract owner can prevent the minting of new coins
-  * !!!!! This is a one-way function. Once the supply is capped it can't be uncapped.
-  */
-  function freezeMint() 
-    public 
-    onlyOwner 
-    returns (bool) 
-  {
-    _supplycapped = true;
-    return isSupplyCapped();
-  }
-
-  /**
-  * @dev View function to check whether the supply has been capped.
-  */
-  function isSupplyCapped() 
-    public 
-    view 
-    returns (bool) 
-  {
-    return _supplycapped;
   }
 
   /**
