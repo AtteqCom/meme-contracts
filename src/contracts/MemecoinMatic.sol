@@ -29,6 +29,7 @@ contract MemecoinMatic is Memecoin {
 
   function deposit(address user, bytes calldata depositData) 
     external 
+    whenNotPaused
   {
     require(msg.sender == childChainManagerProxy, "You're not allowed to deposit");
 
@@ -38,10 +39,34 @@ contract MemecoinMatic is Memecoin {
     _mint(user, amount);
   }
 
-  function withdraw(uint256 amount) 
+  function withdraw(uint256 amount)
     external 
+    whenNotPaused
   {
     _burn(msg.sender, amount);
+  }
+
+    /**
+  * @dev Allows address with granted MINTER_ROLE to mint a number of coins
+  * @param _account Address where will minted coins appear
+  * @param _amount Amount of coins to mint
+  */
+  function mint(address _account, uint256 _amount);
+    external
+    override
+  {
+    revert("ERROR_CHILD_TOKEN_DOES_NOT_ALLOW_DIRECT_MINTING");
+  }
+
+  /**
+  * @dev Allows address to burn a number of coins in its ownership
+  * @param _amount Amount of coins to burn
+  */
+  function burn(uint256 _amount) 
+    external
+    override 
+  {    
+    revert("ERROR_CHILD_TOKEN_DOES_NOT_ALLOW_DIRECT_BURNING");  
   }
 
 }
