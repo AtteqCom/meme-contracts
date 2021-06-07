@@ -13,7 +13,7 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 */
 contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
 
-  bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+  bytes32 internal constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
   constructor(uint256 _totalSupply, string memory _memeTokenName, string memory _memeTokenSymbol) ERC20(_memeTokenName, _memeTokenSymbol)
   {
@@ -55,7 +55,8 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _account Address where will minted coins appear
   * @param _amount Amount of coins to mint
   */
-  function mint(address _account, uint256 _amount) 
+  function mint(address _account, uint256 _amount)
+    virtual 
     external
     whenNotPaused
   {
@@ -69,6 +70,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   * @param _amount Amount of coins to burn
   */
   function burn(uint256 _amount) 
+    virtual
     external 
     whenNotPaused
   {    
@@ -98,8 +100,8 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   }
 
   /**
-  * @dev Adds minter role to address
-  * @param _minterAddress Address to grant minter role
+  * @dev Checks whether the given _minterAddress has MINTER_ROLE role
+  * @param _minterAddress Address to check for MINTER_ROLE role
   */
   function isMinter(address _minterAddress)
     public

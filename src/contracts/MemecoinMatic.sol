@@ -51,7 +51,7 @@ contract MemecoinMatic is Memecoin {
   * @param _account Address where will minted coins appear
   * @param _amount Amount of coins to mint
   */
-  function mint(address _account, uint256 _amount);
+  function mint(address _account, uint256 _amount)
     external
     override
   {
