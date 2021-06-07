@@ -17,8 +17,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
 
   constructor(uint256 _totalSupply, string memory _memeTokenName, string memory _memeTokenSymbol) ERC20(_memeTokenName, _memeTokenSymbol)
   {
-    uint256 mtc = 1e18;
-    _mint(msg.sender, mtc * _totalSupply);
+    _mint(msg.sender, _totalSupply);
 
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
