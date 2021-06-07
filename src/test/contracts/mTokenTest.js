@@ -18,7 +18,9 @@ contract("MTokenTest", accounts => {
 
   before(async () => {
     this.mToken = null;
-    this.memecoin = await Memecoin.new(new BN(1e8), "Memecoin", "mCoin", {from: owner});
+
+    const MEMECOUN_INITIAL_SUPPLY = '100000000000000000000000000'; // 1e8 * 1e18
+    this.memecoin = await Memecoin.new(new BN(MEMECOUN_INITIAL_SUPPLY), "Memecoin", "mCoin", {from: owner});
 
     this.memecoin.transfer(mortyAsInvestor, new BN(1e13), {from: owner});
     this.memecoin.transfer(summerAsInvestorWithoutAllowance, new BN(1e10), {from: owner});
