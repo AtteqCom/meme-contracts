@@ -60,8 +60,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
     external
     whenNotPaused
   {
-    require(hasRole(MINTER_ROLE, msg.sender), "Address is not minter");
-    require(totalSupply() + _amount > totalSupply(), "Increase in supply would cause overflow.");
+    require(isMinter(msg.sender), "Address is not minter");
     
     _mint(_account, _amount);
   }
@@ -124,7 +123,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   /**
   * @dev Unpoause contract 
   */
-  function unpouse()
+  function unpause()
     external
     onlyOwner
   {
