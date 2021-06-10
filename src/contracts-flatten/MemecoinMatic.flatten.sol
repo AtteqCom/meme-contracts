@@ -80,7 +80,7 @@ interface IERC20 {
 
 // File: @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -109,7 +109,7 @@ interface IERC20Metadata is IERC20 {
 
 // File: @openzeppelin/contracts/utils/Context.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -136,7 +136,7 @@ abstract contract Context {
 
 // File: @openzeppelin/contracts/token/ERC20/ERC20.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -442,7 +442,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
 // File: @openzeppelin/contracts/access/Ownable.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -512,7 +512,7 @@ abstract contract Ownable is Context {
 
 // File: @openzeppelin/contracts/security/Pausable.sol
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -604,8 +604,11 @@ abstract contract Pausable is Context {
 
 // File: contracts/Memecoin.sol
 
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+
+pragma solidity 0.8.0;
+
+
+
 
 
 /**
@@ -682,8 +685,9 @@ contract Memecoin is Ownable, Pausable, ERC20 {
 
 // File: contracts/MemecoinMatic.sol
 
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+
+pragma solidity 0.8.0;
+
 
 /**
 * @title MemecoinMatic token
