@@ -51,21 +51,6 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
   }
 
   /**
-  * @dev Allows address with granted MINTER_ROLE to mint a number of coins
-  * @param _account Address where will minted coins appear
-  * @param _amount Amount of coins to mint
-  */
-  function mint(address _account, uint256 _amount)
-    virtual 
-    external
-    whenNotPaused
-  {
-    require(isMinter(msg.sender), "Address is not minter");
-    
-    _mint(_account, _amount);
-  }
-
-  /**
   * @dev Allows address to burn a number of coins in its ownership
   * @param _amount Amount of coins to burn
   */
