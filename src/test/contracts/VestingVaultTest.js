@@ -109,7 +109,7 @@ contract('VestingVault', function ([owner, other]) {
     it('should reject transfer outside of allowance', async function () {
         await expectRevert(
             this.vault.addTokenGrant(other, 1001, 10, 0),
-            "ERC20: transfer amount exceeds balance"
+            "ERC20: transfer amount exceeds allowance"
         );
     });
 
