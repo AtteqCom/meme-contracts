@@ -2,6 +2,8 @@
 pragma solidity 0.8.0;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
@@ -11,6 +13,8 @@ import {MTokenInterface} from "./interfaces/MTokenInterface.sol";
 /// @title ERC20 token
 /// @dev This is used only for unit tests
 contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
+
+  using SafeERC20 for IERC20;
 
   string public constant ERROR_FEE_IS_ABOVE_LIMIT = 'ERROR_FEE_IS_ABOVE_LIMIT';
 
@@ -32,7 +36,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   /**
   * @dev Contracts reserve currency   
   */
-  ERC20 public reserveCurrency;
+  IERC20 public reserveCurrency;
 
 
   /**
@@ -51,7 +55,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 _initialSupply,
     string memory _memeTokenName, 
     string memory _memeTokenSymbol,
-    ERC20 _reserveCurrency,
+    IERC20 _reserveCurrency,
     uint32 _reserveWeight,
     uint16 _fee,
     uint16 _feeLimit,
@@ -108,8 +112,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 mTokenAmount = bancorFormula.purchaseTargetAmount(totalSupply(), reserveBalance, reserveWeight, amountOfReserveCurrencyExcludingFee);
     
 
-    reserveCurrency.transferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
-    reserveCurrency.transferFrom(msg.sender, owner(), fee);
+    reserveCurrency.safeTransferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
+    reserveCurrency.safeTransferFrom(msg.sender, owner(), fee);
     _mint(msg.sender, mTokenAmount);
 
     emit Invested(msg.sender, amountOfReserveCurrencyExcludingFee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
@@ -132,9 +136,9 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 fee = computeFee(reserveCurrencyAmountToReturnTotal);
     uint256 reserveCurrencyAmountToReturn = reserveCurrencyAmountToReturnTotal - fee;
 
+    reserveCurrency.safeTransfer(msg.sender, reserveCurrencyAmountToReturn);
+    reserveCurrency.safeTransfer(owner(), fee);
     _burn(msg.sender, _amountOfMTokens);
-    reserveCurrency.transfer(msg.sender, reserveCurrencyAmountToReturn);
-    reserveCurrency.transfer(owner(), fee);
 
     emit SoldShare(msg.sender, fee, reserveCurrencyAmountToReturn, _amountOfMTokens);
   }
