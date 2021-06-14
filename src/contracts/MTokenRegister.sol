@@ -3,6 +3,8 @@ pragma solidity 0.8.0;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
 import {MTokenInitialSettingInterface} from "./interfaces/MTokenInitialSettingInterface.sol";
@@ -14,6 +16,8 @@ import {StringUtils} from "./libraries/StringUtils.sol";
 /// @title ERC721 token
 /// @dev This is used only for unit tests
 contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
+
+  using SafeERC20 for IERC20;
 
   struct MemecoinRegistration {
     uint256 index;
@@ -40,7 +44,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   /**
   * @dev reserve currency 
   */
-  ERC20 public memecoin;
+  IERC20 public memecoin;
 
   /**
   * @dev contract creating specific instance/version of mToken contract
@@ -120,7 +124,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
   * @param _reserveCurrency Address of new MTokenFactory contract
   */
-  function setReserveCurrency(ERC20 _reserveCurrency)
+  function setReserveCurrency(IERC20 _reserveCurrency)
     public
     onlyOwner 
   {
@@ -200,7 +204,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     uint256 creationPrice = mTokenInitialSetting.getCreationPrice();
 
     // pay owner price for mToken creation
-    memecoin.transferFrom(msg.sender, owner(), creationPrice);
+    memecoin.safeTransferFrom(msg.sender, owner(), creationPrice);
 
     // create
     address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
@@ -215,7 +219,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     nameHashIndex[numericHashOfTokenName] = mTokenAddress;
 
     // adds initial funds of reserveCurrency to mToken contract
-    memecoin.transferFrom(msg.sender, address(mTokenAddress), reserveCurrencyInitialSupply);
+    memecoin.safeTransferFrom(msg.sender, address(mTokenAddress), reserveCurrencyInitialSupply);
 
     emit MTokenRegistered(mTokenAddress, creationPrice, reserveCurrencyInitialSupply);
 
