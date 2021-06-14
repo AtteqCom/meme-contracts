@@ -20,6 +20,10 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   string public constant ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL = 'ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL';
 
+  string public constant ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET';
+
+  string public constant ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET';
+
   uint256 public constant ONE_MTOKEN = 1e18;
 
   /**
@@ -96,10 +100,12 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   /**
   * @dev Amount of Main Currency is invested for mTokens
-  * @param _amountOfReserveCurrency amount of mTokens
+  * @param _amountOfReserveCurrency amount of reserve currency to be invested
+  * @param _minimumInvestmentTargetAmount minimum amount of mTokens gainned by this investment. if not met then fails. Fee included.
   */
   function invest(
-    uint256 _amountOfReserveCurrency
+    uint256 _amountOfReserveCurrency,
+    uint256 _minimumInvestmentTargetAmount
   )
     external
     override
@@ -110,7 +116,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
     uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
     uint256 mTokenAmount = bancorFormula.purchaseTargetAmount(totalSupply(), reserveBalance, reserveWeight, amountOfReserveCurrencyExcludingFee);
-    
+
+    require(mTokenAmount >= _minimumInvestmentTargetAmount, ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET);
 
     reserveCurrency.safeTransferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
     reserveCurrency.safeTransferFrom(msg.sender, owner(), fee);
@@ -121,10 +128,12 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   /**
   * @dev Sell share of mTokens and get corrsponding amount of Main Currency
-    @param _amountOfMTokens amount of mTokens to sell
+  * @param _amountOfMTokens amount of mTokens to sell
+  * @param _minimumSaleTargetAmount minimum amount of reserve currency to target by sale. if not met then fails. Fee included.
   */
   function sellShare(
-    uint256 _amountOfMTokens
+    uint256 _amountOfMTokens,
+    uint256 _minimumSaleTargetAmount
   )
     external
     override
@@ -133,8 +142,12 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
     uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
     uint256 reserveCurrencyAmountToReturnTotal = bancorFormula.saleTargetAmount(totalSupply(), reserveBalance, reserveWeight, _amountOfMTokens);
+
+
     uint256 fee = computeFee(reserveCurrencyAmountToReturnTotal);
     uint256 reserveCurrencyAmountToReturn = reserveCurrencyAmountToReturnTotal - fee;
+
+    require(reserveCurrencyAmountToReturn >= _minimumSaleTargetAmount, ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET);
 
     reserveCurrency.safeTransfer(msg.sender, reserveCurrencyAmountToReturn);
     reserveCurrency.safeTransfer(owner(), fee);

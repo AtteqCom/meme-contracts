@@ -20,20 +20,24 @@ interface MTokenInterface is IERC20 {
     external;
 
   /**
-  * @dev Amount of Main Currency is invested for mTokens
-  * @param _amountOfReserveCurrency amount of Main Currency to invest
+  * @dev Amount of reserve currency is invested for mTokens
+  * @param _amountOfReserveCurrency amount of reserve Currency to invest
+  * @param _minimumInvestmentTargetAmount minimum amount of mTokens gainned by this investment. if not met then fails. Fee included.
   */
   function invest(
-    uint256 _amountOfReserveCurrency
+    uint256 _amountOfReserveCurrency,
+    uint256 _minimumInvestmentTargetAmount
   )
     external;
 
   /**
   * @dev Sell share of mTokens and get corrsponding amount of Main Currency
-    @param _amountOfTokens amount of mTokens to sell
+  * @param _amountOfMTokens amount of mTokens to sell
+  * @param _minimumSaleTargetAmount minimum amount of reserve currency to target by sale. if not met then fails. Fee included.
   */
   function sellShare(
-    uint256 _amountOfTokens
+    uint256 _amountOfMTokens,
+    uint256 _minimumSaleTargetAmount
   )
     external;
 
