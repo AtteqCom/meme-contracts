@@ -21,7 +21,6 @@ contract VestingVault is Ownable {
     event GrantAdded(address indexed recipient);
     event GrantTokensClaimed(address indexed recipient, uint256 amountClaimed);
     event GrantRevoked(address recipient, uint256 amountVested, uint256 amountNotVested);
-    event LogNumber(string name, uint num);
 
     ERC20 public token;
     
