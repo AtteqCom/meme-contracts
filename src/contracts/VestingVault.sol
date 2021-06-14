@@ -1,5 +1,6 @@
 /*
-Original work taken from https://github.com/tapmydata/tap-protocol
+Original work taken from https://github.com/tapmydata/tap-protocol, which 
+was based on https://gist.github.com/rstormsf/7cfb0c6b7a835c0c67b4a394b4fd9383.
 */
 pragma solidity ^0.8.0;
 
@@ -20,16 +21,22 @@ contract VestingVault is Ownable {
     event GrantAdded(address indexed recipient);
     event GrantTokensClaimed(address indexed recipient, uint256 amountClaimed);
     event GrantRevoked(address recipient, uint256 amountVested, uint256 amountNotVested);
+    event LogNumber(string name, uint num);
 
     ERC20 public token;
     
     mapping (address => Grant) private tokenGrants;
 
-    uint256 public totalVestingCount;
+    /**
+     * Granularity for vesting periods, in days. Vesting amounts will be released in multiples of
+     * this period.
+     */
+    uint16 public vestingGranularityDays;
 
-    constructor(ERC20 _token) public {
+    constructor(ERC20 _token, uint16 _vestingGranularityDays) public {
         require(address(_token) != address(0));
         token = _token;
+        vestingGranularityDays = _vestingGranularityDays;
     }
     
     function addTokenGrant(
@@ -44,9 +51,10 @@ contract VestingVault is Ownable {
         require(tokenGrants[_recipient].amount == 0, "Grant already exists, must revoke first.");
         require(_vestingCliffInDays <= 10*365, "Cliff greater than 10 years");
         require(_vestingDurationInDays <= 25*365, "Duration greater than 25 years");
+        require(_vestingDurationInDays % vestingGranularityDays == 0, "Duration must be an exact multiple of granularity");
         
-        uint256 amountVestedPerDay = _amount / _vestingDurationInDays;
-        require(amountVestedPerDay > 0, "amountVestedPerDay > 0");
+        uint256 amountVestedPerPeriod = _amount / (_vestingDurationInDays / vestingGranularityDays);
+        require(amountVestedPerPeriod > 0, "amountVestedPerPeriod > 0");
 
         // Transfer the grant tokens under the control of the vesting contract
         require(token.transferFrom(owner(), address(this), _amount));
@@ -130,16 +138,18 @@ contract VestingVault is Ownable {
         }
 
         // Check cliff was reached
-        uint elapsedDays = (currentTime() - (tokenGrant.startTime - 1 days)) / 1 days;
+        uint16 elapsedDays = uint16((currentTime() - (tokenGrant.startTime - 1 days)) / 1 days);
 
         // If over vesting duration, all tokens vested
         if (elapsedDays >= tokenGrant.vestingDuration) {
             uint256 remainingGrant = tokenGrant.amount - tokenGrant.totalClaimed;
             return (tokenGrant.vestingDuration, remainingGrant);
         } else {
-            uint16 daysVested = uint16(elapsedDays - tokenGrant.daysClaimed);
-            uint256 amountVestedPerDay = tokenGrant.amount / (uint256(tokenGrant.vestingDuration));
-            uint256 amountVested = uint256(daysVested * amountVestedPerDay);
+            uint16 daysVested = elapsedDays - tokenGrant.daysClaimed;
+            uint16 periodCount = tokenGrant.vestingDuration / vestingGranularityDays;
+            uint16 periodsVested =  daysVested / vestingGranularityDays;
+            uint256 amountVestedPerPeriod = uint256(tokenGrant.amount / periodCount);
+            uint256 amountVested = uint256(periodsVested * amountVestedPerPeriod);
             return (daysVested, amountVested);
         }
     }
