@@ -112,8 +112,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 mTokenAmount = bancorFormula.purchaseTargetAmount(totalSupply(), reserveBalance, reserveWeight, amountOfReserveCurrencyExcludingFee);
     
 
-    reserveCurrency.transferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
-    reserveCurrency.transferFrom(msg.sender, owner(), fee);
+    reserveCurrency.safeTransferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
+    reserveCurrency.safeTransferFrom(msg.sender, owner(), fee);
     _mint(msg.sender, mTokenAmount);
 
     emit Invested(msg.sender, amountOfReserveCurrencyExcludingFee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
@@ -136,8 +136,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 fee = computeFee(reserveCurrencyAmountToReturnTotal);
     uint256 reserveCurrencyAmountToReturn = reserveCurrencyAmountToReturnTotal - fee;
 
-    reserveCurrency.transfer(msg.sender, reserveCurrencyAmountToReturn);
-    reserveCurrency.transfer(owner(), fee);
+    reserveCurrency.safeTransfer(msg.sender, reserveCurrencyAmountToReturn);
+    reserveCurrency.safeTransfer(owner(), fee);
     _burn(msg.sender, _amountOfMTokens);
 
     emit SoldShare(msg.sender, fee, reserveCurrencyAmountToReturn, _amountOfMTokens);
