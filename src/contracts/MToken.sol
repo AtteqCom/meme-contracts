@@ -132,9 +132,9 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 fee = computeFee(reserveCurrencyAmountToReturnTotal);
     uint256 reserveCurrencyAmountToReturn = reserveCurrencyAmountToReturnTotal - fee;
 
+    _burn(msg.sender, _amountOfMTokens);
     reserveCurrency.transfer(msg.sender, reserveCurrencyAmountToReturn);
     reserveCurrency.transfer(owner(), fee);
-    _burn(msg.sender, _amountOfMTokens);
 
     emit SoldShare(msg.sender, fee, reserveCurrencyAmountToReturn, _amountOfMTokens);
   }
