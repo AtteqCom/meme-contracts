@@ -7,14 +7,21 @@ const helper = require('./libraries/utils.js');
 const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
 
 // Load compiled artifacts
+/**
+ * Note these tests for VestingVault have some dependencies on the ERC20 token used. Notably:
+ * - signature of the constructor and minting function
+ * - exact wording of error messages, as these are tested for in some assertions
+ */
 const Token = artifacts.require('Memecoin');
 const VestingVault = artifacts.require('VestingVault');
 
 // Start test block
 contract('VestingVault', function ([owner, other]) {
 
-    const initialSupply = new BN('1000');
-    const cap = new BN('1000');
+    /**
+     * Total tokens minted, all to owner
+     */
+    const cap = new BN('2000');
     const unixTime = Math.floor(Date.now() / 1000);
 
     beforeEach(async function () {
@@ -22,11 +29,12 @@ contract('VestingVault', function ([owner, other]) {
         snapshotId = snapShot['result'];
 
         this.token = await Token.new(cap, 'Memecoin', 'MEM');
-        await this.token.addMinter(owner);
-
-        await this.token.mint(owner, initialSupply);
 
         this.vault = await VestingVault.new(this.token.address)
+        /**
+         * Allowance for the Vault contract. We deliberately use a lower amount than the total
+         * supply to distinguish between exceeding balance and exceeding allowance.
+         */
         await this.token.approve(this.vault.address, 1000);
     });
 
@@ -103,6 +111,13 @@ contract('VestingVault', function ([owner, other]) {
         await expectRevert(
             this.vault.addTokenGrant(other, 10, 1000, 1000),
             "amountVestedPerDay > 0"
+        );
+    });
+
+    it('should reject transfer outside of balance', async function () {
+        await expectRevert(
+            this.vault.addTokenGrant(other, 2001, 10, 0),
+            "ERC20: transfer amount exceeds balance"
         );
     });
 
@@ -255,13 +270,16 @@ contract('VestingVault', function ([owner, other]) {
     });
 
     it('owner can revoke token grant', async function () {
+        expect((await this.token.balanceOf(owner)).toString()).to.equal("2000");
+
+        expect((await this.token.balanceOf(this.vault.address)).toString()).to.equal("0");
         await this.vault.addTokenGrant(other, 1000, 3, 7);
         expect((await this.token.balanceOf(this.vault.address)).toString()).to.equal("1000");
 
         await time.increase(time.duration.days(8));
         await this.vault.revokeTokenGrant(other);
 
-        expect((await this.token.balanceOf(owner)).toString()).to.equal("334");
+        expect((await this.token.balanceOf(owner)).toString()).to.equal("1334");
         expect((await this.token.balanceOf(other)).toString()).to.equal("666");
         expect((await this.token.balanceOf(this.vault.address)).toString()).to.equal("0");
     });
