@@ -18,6 +18,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   string public constant ERROR_FEE_IS_ABOVE_LIMIT = 'ERROR_FEE_IS_ABOVE_LIMIT';
 
+  string internal constant ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT = 'ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT';
+
   string public constant ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL = 'ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL';
 
   string public constant ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET';
@@ -25,6 +27,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   string public constant ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET';
 
   uint256 public constant ONE_MTOKEN = 1e18;
+
+  uint16 internal constant ONE_HUNDRED_PERCENT = 10000;
 
   /**
   * @dev Transaction fee applied to invest and sale prices where 1% is equal to 100. 100% equals to 10000
@@ -65,7 +69,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint16 _feeLimit,
     IBancorFormula _formula) ERC20(_memeTokenName, _memeTokenSymbol)
   {
-
+    require(_feeLimit < ONE_HUNDRED_PERCENT, ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT);
     transferOwnership(_owner);
 
     _mint(address(this), _initialSupply);
@@ -241,18 +245,6 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     view
     returns (uint256)
   {
-    return amount * transactionFee / 10000;
-  }
-
-  /**
-   * @dev Returns such reserve currency amount that when substracting the fee from returned value you wil get _reserveCurrencyAmountWithoutFee
-   * @param _reserveCurrencyAmountWithoutFee reserve currency amount
-   */
-  function computeInvestmentAmountWithFee(uint256 _reserveCurrencyAmountWithoutFee)
-    public
-    view
-    returns (uint256)
-  {
-    return 10000 * _reserveCurrencyAmountWithoutFee / (10000 - transactionFee);
+    return amount * transactionFee / ONE_HUNDRED_PERCENT;
   }
 }
