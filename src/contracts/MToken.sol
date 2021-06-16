@@ -123,7 +123,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     reserveCurrency.safeTransferFrom(msg.sender, owner(), fee);
     _mint(msg.sender, mTokenAmount);
 
-    emit Invested(msg.sender, amountOfReserveCurrencyExcludingFee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
+    emit Invested(msg.sender, fee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
   }
 
   /**
