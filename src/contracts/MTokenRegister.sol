@@ -121,8 +121,8 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   }
 
   /**
-  * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
-  * @param _reserveCurrency Address of new MTokenFactory contract
+  * @dev Sets new Reserve currency contract and grants MTOKEN_FACTORY_ROLE to it.
+  * @param _reserveCurrency Address of new Reserve currency contract
   */
   function setReserveCurrency(IERC20 _reserveCurrency)
     public
@@ -160,8 +160,8 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
 
   /**
-  * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
-  * @param _mTokenInitialSetting Address of new MTokenFactory contract
+  * @dev Sets new MTokenInitialSetting contract and grants MTOKEN_FACTORY_ROLE to it.
+  * @param _mTokenInitialSetting Address of new MTokenInitialSetting contract
   */
   function setMTokenInitialSetting(MTokenInitialSettingInterface _mTokenInitialSetting)
     public
@@ -173,7 +173,6 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
     emit MTokenInitialSettingChanged(address(mTokenInitialSetting), oldMTokenInitialSetting);
   }
-
 
 
   /**

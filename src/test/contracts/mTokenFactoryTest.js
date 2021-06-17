@@ -21,28 +21,20 @@ contract("MTokenFactoryTest", accounts => {
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
 
-    this.mTokenFactory = await MTokenFactory.new(this.memecoin.address, this.mTokenInitialSetting.address, this.bancor.address);
-  });
-
-  it("Checks revert when Meme Coin Register is not set", async () => {
-    let ERROR_MEME_COIN_REGISTER_NOT_SET = await this.mTokenFactory.ERROR_MEME_COIN_REGISTER_NOT_SET();
-    await expectRevert(this.mTokenFactory.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_REGISTER_NOT_SET);
-  });
-
-  it("Sets MTokenRegister Contract", async () => {
-    let _memecoinRegisterAddress = await this.mTokenFactory.mTokenRegister();
-
-    const { logs } = await this.mTokenFactory.setMemecoinRegsiter(this.mTokenRegister.address);
-    expectEvent.inLogs(logs, 'MemecoinRegisterChanged', { newMemecoinRegisterAddress: this.mTokenRegister.address, oldMemecoinRegisterAddress: _memecoinRegisterAddress });
-
-    _memecoinRegisterAddress = await this.mTokenFactory.mTokenRegister();
-
-    assert.equal(this.mTokenRegister.address, _memecoinRegisterAddress);
+    this.mTokenFactory = await MTokenFactory.new(this.mTokenRegister.address, this.memecoin.address, this.mTokenInitialSetting.address, this.bancor.address);
   });
 
   it("Only Meme Coin Register contract as caller can create MToken", async () => {
-    let ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = await this.mTokenFactory.ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER();
-    await expectRevert(this.mTokenFactory.createMToken('CanBeAnythingAtThisPoint', 'CBAATP'), ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER);
+    await expectRevert(this.mTokenFactory.createMToken('CanBeAnythingAtThisPoint', 'CBAATP', {from: rick}), "ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER");
+  });
+
+  it("Pause contract", async () => {
+    await this.mTokenFactory.pause();
+    await assert(this.mTokenFactory.paused());
+  });
+
+  it("Revert when paused", async () => {
+    await expectRevert(this.mTokenFactory.createMToken('CanBeAnythingAtThisPoint', 'CBAATP'), "Pausable: paused");
   });
 
 
