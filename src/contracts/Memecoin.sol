@@ -111,7 +111,7 @@ contract Memecoin is Ownable, AccessControl, Pausable, ERC20 {
     return hasRole(MINTER_ROLE, _minterAddress);
   }
 
-    /**
+  /**
   * @dev Pause contract
   */
   function pause()
