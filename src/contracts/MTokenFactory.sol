@@ -21,10 +21,10 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
 
   string internal constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
 
-  MTokenRegisterInterface public mTokenRegister;
-  Memecoin public reserveCurrency;
-  MTokenInitialSetting public mTokenInitialSetting;
-  IBancorFormula public bancorFormula;
+  MTokenRegisterInterface public immutable mTokenRegister;
+  Memecoin public immutable reserveCurrency;
+  MTokenInitialSetting public immutable mTokenInitialSetting;
+  IBancorFormula public immutable bancorFormula;
 
   constructor(MTokenRegisterInterface _mTokenRegister, Memecoin _reserveCurrency, MTokenInitialSetting _mTokenInitialSetting,  IBancorFormula _bancorFormula) {
     mTokenRegister = _mTokenRegister;
