@@ -99,7 +99,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 oldFee = transactionFee;
     transactionFee = _transactionFee;
 
-    emit TransactionFeeChanged(transactionFee, oldFee);
+    emit TransactionFeeChanged(_transactionFee, oldFee);
   }
 
   /**
