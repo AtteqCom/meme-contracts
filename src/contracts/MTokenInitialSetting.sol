@@ -9,6 +9,19 @@ import {MTokenInitialSettingInterface} from "./interfaces/MTokenInitialSettingIn
 /// @dev Contract providing initial setting for creation of MToken contracts
 contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
 
+
+    string internal constant ERROR_PRICE_CAN_NOT_BE_ZERO = 'ERROR_PRICE_CAN_NOT_BE_ZERO';
+    string internal constant ERROR_INITIAL_SUPPLY_CAN_NOT_BE_ZERO = 'ERROR_INITIAL_SUPPLY_CAN_NOT_BE_ZERO';
+    string internal constant ERROR_RESERVE_CURRENCY_WEIGHT_CAN_NOT_BE_ZERO = 'ERROR_RESERVE_CURRENCY_WEIGHT_CAN_NOT_BE_ZERO';
+    string internal constant ERROR_RESERVE_CURRENCY_SUPPLY_CAN_NOT_BE_ZERO = 'ERROR_RESERVE_CURRENCY_SUPPLY_CAN_NOT_BE_ZERO';
+    string internal constant ERROR_FEE_LIMIT_CAN_NOT_BE_ZERO = 'ERROR_FEE_LIMIT_CAN_NOT_BE_ZERO';
+    string internal constant ERROR_FEE_ABOVE_LIMIT = 'ERROR_FEE_ABOVE_LIMIT';
+    string internal constant ERROR_FEE_LIMIT_ABOVE_OR_EQAULS_TO_HUNDRED_PERCENT = 'ERROR_FEE_LIMIT_ABOVE_OR_EQAULS_TO_HUNDRED_PERCENT';
+    string internal constant ERROR_RESERVE_CURRENCY_WEIGHT_IS_ABOVE_MAX = 'ERROR_RESERVE_CURRENCY_WEIGHT_IS_ABOVE_MAX';
+
+    uint16 internal constant ONE_HUNDRED_PERCENT = 10000;
+    uint32 internal constant MAX_RESERVE_CURRENCY_WEIGHT = 1000000;
+
   /** 
   * @dev Structure what hold MToken initial settings
   * @param mTokenCreationPrice Price of mToken creation/registration
@@ -30,6 +43,38 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
 
   MTokenSetting public mTokenSetting;
 
+  /**
+  * @dev modifier Throws when value is not above zero
+  */
+  modifier aboveZero(uint256 _value, string memory _error) {
+    require(_value > 0, _error);
+    _;
+  }
+
+  /**
+  * @dev modifier Throws when provided _fee is above fee limit property
+  */
+  modifier feeSmallerThanLimit(uint16 _fee, uint16 _feeLimit) {
+    require(_fee < _feeLimit, ERROR_FEE_ABOVE_LIMIT);
+    _;
+  }
+
+  /**
+  * @dev modifier Throws when provided _feeLimit is above fee limit property
+  */
+  modifier feeLimitSmallerThanHundredPercent(uint16 _feeLimit) {
+    require(_feeLimit < ONE_HUNDRED_PERCENT, ERROR_FEE_LIMIT_ABOVE_OR_EQAULS_TO_HUNDRED_PERCENT);
+    _;
+  }
+
+  /**
+  * @dev modifier Throws when provided _feeLimit is above fee limit property
+  */
+  modifier reserveCurrencyWeightBelowMax(uint32 _reserveCurrencyWeight) {
+    require(_reserveCurrencyWeight <= MAX_RESERVE_CURRENCY_WEIGHT, ERROR_RESERVE_CURRENCY_WEIGHT_IS_ABOVE_MAX);
+    _;
+  }
+
   constructor(    
     uint256 _creationPrice,
     uint256 _initialSupply,
@@ -38,15 +83,18 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
     uint32 _reserveCurrencyWeight,
     uint256 _reserveCurrencyInitialSupply
   ) {
+    MTokenSetting memory _mTokenSetting = MTokenSetting(
+      _creationPrice,
+      _initialSupply,
+      _fee,
+      _feeLimit,
+      _reserveCurrencyWeight,
+      _reserveCurrencyInitialSupply
+    );
 
-      mTokenSetting = MTokenSetting(
-        _creationPrice,
-        _initialSupply,
-        _fee,
-        _feeLimit,
-        _reserveCurrencyWeight,
-        _reserveCurrencyInitialSupply
-      );
+    checkCosntructorRequirements(_mTokenSetting);
+
+    mTokenSetting = _mTokenSetting;
   }
 
   /**
@@ -76,8 +124,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   * @param newWeight new weight
   * @param oldWeight old weight
   */
-  event ReserveCurrencyWeightChanged(uint32 newWeight, uint32 oldWeight);
-  
+  event ReserveCurrencyWeightChanged(uint32 newWeight, uint32 oldWeight);  
+
 
   /**
   * @dev Explicit method returing MTokenSetting structure
@@ -122,7 +170,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   */
   function setCreationPrice(uint256 _price)
     public
-    onlyOwner 
+    onlyOwner
+    aboveZero(_price, ERROR_PRICE_CAN_NOT_BE_ZERO)
   {
     uint256 oldPrice = mTokenSetting.creationPrice;
 
@@ -137,7 +186,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   */
   function setReserveCurrencyInitialSupply(uint256 _mTokenReserveCurrencyInitialSupply)
     public
-    onlyOwner 
+    onlyOwner
+    aboveZero(_mTokenReserveCurrencyInitialSupply, ERROR_RESERVE_CURRENCY_SUPPLY_CAN_NOT_BE_ZERO)
   {
     uint256 oldMTokenInitialReserveCurrencySupply = mTokenSetting.reserveCurrencyInitialSupply;
 
@@ -153,6 +203,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   function setInitialSupply(uint256 _mTokenInitialSupply)
     public
     onlyOwner
+    aboveZero(_mTokenInitialSupply, ERROR_INITIAL_SUPPLY_CAN_NOT_BE_ZERO)
   {
     uint256 oldMTokenInitialSupply = mTokenSetting.initialSupply;
 
@@ -168,6 +219,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   function setInitialFee(uint16 _fee)
     public
     onlyOwner
+    feeSmallerThanLimit(_fee, mTokenSetting.feeLimit)
   {
     uint16 oldFee = mTokenSetting.fee;
 
@@ -183,6 +235,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   function setInitialFeeLimit(uint16 _feeLimit)
     public
     onlyOwner
+    aboveZero(_feeLimit, ERROR_FEE_LIMIT_CAN_NOT_BE_ZERO)
+    feeLimitSmallerThanHundredPercent(_feeLimit)
   {
     uint16 oldFeeLimit = mTokenSetting.feeLimit;
 
@@ -198,6 +252,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   function setReserveCurrencyWeight(uint32 _weight)
     public
     onlyOwner
+    aboveZero(_weight, ERROR_RESERVE_CURRENCY_WEIGHT_CAN_NOT_BE_ZERO)
+    reserveCurrencyWeightBelowMax(_weight)
   {
     uint32 oldReserveCurrencyWeight = mTokenSetting.reserveCurrencyWeight;
 
@@ -207,5 +263,18 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   }
 
 
-
+  /**
+  * @dev modifiers evaluating constructor requirements moved over here to avoid "Stack Too Deep" error
+  */
+  function checkCosntructorRequirements(MTokenSetting memory _mTokenSetting)
+    private
+    aboveZero(_mTokenSetting.creationPrice, ERROR_PRICE_CAN_NOT_BE_ZERO)
+    aboveZero(_mTokenSetting.initialSupply, ERROR_INITIAL_SUPPLY_CAN_NOT_BE_ZERO)
+    aboveZero(_mTokenSetting.reserveCurrencyWeight, ERROR_RESERVE_CURRENCY_WEIGHT_CAN_NOT_BE_ZERO)
+    aboveZero(_mTokenSetting.reserveCurrencyInitialSupply, ERROR_RESERVE_CURRENCY_SUPPLY_CAN_NOT_BE_ZERO)
+    aboveZero(_mTokenSetting.feeLimit, ERROR_FEE_LIMIT_CAN_NOT_BE_ZERO)
+    feeLimitSmallerThanHundredPercent(_mTokenSetting.feeLimit)
+    feeSmallerThanLimit(_mTokenSetting.fee, _mTokenSetting.feeLimit)
+    reserveCurrencyWeightBelowMax(_mTokenSetting.reserveCurrencyWeight)
+  { }
 }
