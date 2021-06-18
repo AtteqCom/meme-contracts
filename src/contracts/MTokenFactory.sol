@@ -19,7 +19,7 @@ import {MToken} from "./MToken.sol";
  */
 contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
 
-  string public constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
+  string internal constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
 
   MTokenRegisterInterface public mTokenRegister;
   Memecoin public reserveCurrency;
