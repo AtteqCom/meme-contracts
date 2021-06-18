@@ -142,8 +142,6 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     external
     override
   {
-    require(balanceOf(msg.sender) >= _amountOfMTokens, ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL);
-
     uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
     uint256 reserveCurrencyAmountToReturnTotal = bancorFormula.saleTargetAmount(totalSupply(), reserveBalance, reserveWeight, _amountOfMTokens);
 
