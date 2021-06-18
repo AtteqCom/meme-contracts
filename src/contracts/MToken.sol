@@ -38,25 +38,25 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   /**
   * @dev Transaction fee limit.. limits fee to max 10% of reserveCurrency
   */
-  uint16 public transactionFeeLimit;
+  uint16 public immutable transactionFeeLimit;
 
 
   /**
   * @dev Contracts reserve currency   
   */
-  IERC20 public reserveCurrency;
+  IERC20 public immutable reserveCurrency;
 
 
   /**
   * @dev Reverse weight can not be changed after creation, one of Bancors properties   
   */
-  uint32 public reserveWeight;
+  uint32 public immutable reserveWeight;
 
 
   /**
   * @dev Bancor formula providing token minting and burning strategy   
   */
-  IBancorFormula public bancorFormula;
+  IBancorFormula public immutable bancorFormula;
 
   constructor(
     address _owner,
