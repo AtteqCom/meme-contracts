@@ -65,8 +65,7 @@ contract("MTokenRegisterTest", accounts => {
       });
 
       it("Reverts when Memecoin is not set.", async () => {
-        let ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = await this.newMTokenRegister.ERROR_MEME_COIN_CONTRACT_IS_NOT_SET();
-        await expectRevert(this.newMTokenRegister.createMToken('DodgeMToken', 'DMT'), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
+        await expectRevert(this.newMTokenRegister.createMToken('DodgeMToken', 'DMT'), 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET');
       });
 
       it("Set Memecoin contract", async () => {
@@ -82,8 +81,7 @@ contract("MTokenRegisterTest", accounts => {
       });
     
       it("Reverts when MTokenFactory is not set", async () => {
-        let ERROR_FACTORY_CONTRACT_IS_NOT_SET = await this.newMTokenRegister.ERROR_FACTORY_CONTRACT_IS_NOT_SET();
-        await expectRevert(this.newMTokenRegister.createMToken('DodgeMToken', 'DMT'), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
+        await expectRevert(this.newMTokenRegister.createMToken('DodgeMToken', 'DMT'), 'ERROR_FACTORY_CONTRACT_IS_NOT_SET');
       });
     
       it("Set MTokenFactory contract", async () => {
@@ -107,13 +105,11 @@ contract("MTokenRegisterTest", accounts => {
       });
   
       it("Reverts when creator has not set enough allowance", async () => {
-        let ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = await this.mTokenRegister.ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE();
-        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE');
       });
 
       it("Reverts when creator has not enough balance", async () => {
-        let ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = await this.mTokenRegister.ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE();
-        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: mortyAsNotEnoughBalance}), ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: mortyAsNotEnoughBalance}), 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE');
       });
   
       it("Creates new MToken", async () => {
@@ -145,23 +141,19 @@ contract("MTokenRegisterTest", accounts => {
       });
 
       it("Reverts name exists", async () => {
-        let ERROR_NAME_IS_TAKEN = await this.mTokenRegister.ERROR_NAME_IS_TAKEN();
-        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), 'ERROR_NAME_IS_TAKEN');
       });
 
       it("Reverts symbol exists", async () => {
-        let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
-        await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+        await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), 'ERROR_SYMBOL_IS_TAKEN');
       });
 
       it("Reverts name exists - lowercase check", async () => {
-        let ERROR_NAME_IS_TAKEN = await this.mTokenRegister.ERROR_NAME_IS_TAKEN();
-        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME_LOWERCASE, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME_LOWERCASE, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), 'ERROR_NAME_IS_TAKEN');
       });
 
       it("Reverts symbol exists - lowercase check", async () => {
-        let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
-        await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL_LOWERCASE, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+        await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL_LOWERCASE, {from: summerAsCorrectCreator}), 'ERROR_SYMBOL_IS_TAKEN');
       });
 
       it("Creates another cool MToken", async () => {
@@ -189,33 +181,27 @@ contract("MTokenRegisterTest", accounts => {
       });
 
       it("Reverts 2nd name exists - lowercase check", async () => {
-        let ERROR_NAME_IS_TAKEN = await this.mTokenRegister.ERROR_NAME_IS_TAKEN();
-        await expectRevert(this.mTokenRegister.createMToken("Dodge meme", "FLP", {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
+        await expectRevert(this.mTokenRegister.createMToken("Dodge meme", "FLP", {from: summerAsCorrectCreator}), 'ERROR_NAME_IS_TAKEN');
       });
 
       it("Reverts 2nd symbol exists - lowercase check", async () => {
-        let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
-        await expectRevert(this.mTokenRegister.createMToken("FLOP MEME", "DGMXXXx", {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+        await expectRevert(this.mTokenRegister.createMToken("FLOP MEME", "DGMXXXx", {from: summerAsCorrectCreator}), 'ERROR_SYMBOL_IS_TAKEN');
       });
 
       it("MToken name invalid and symbol valid", async () => {
-        let ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = await this.mTokenRegister.ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS();
-        await expectRevert(this.mTokenRegister.createMToken("Dodge\tMeme 2", "DGMXXXX2", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
+        await expectRevert(this.mTokenRegister.createMToken("Dodge\tMeme 2", "DGMXXXX2", {from: summerAsCorrectCreator}), 'ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS');
       });
 
       it("MToken name empty and symbol valid", async () => {
-        let ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = await this.mTokenRegister.ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY();
-        await expectRevert(this.mTokenRegister.createMToken("", "DGMXXXX3", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY);
+        await expectRevert(this.mTokenRegister.createMToken("", "DGMXXXX3", {from: summerAsCorrectCreator}), 'ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY');
       });
 
       it("MToken name valid and symbol invalid", async () => {
-        let ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = await this.mTokenRegister.ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS();
-        await expectRevert(this.mTokenRegister.createMToken("Dodge Meme 4  ", "DGMXXXX\t4", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
+        await expectRevert(this.mTokenRegister.createMToken("Dodge Meme 4  ", "DGMXXXX\t4", {from: summerAsCorrectCreator}), 'ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS');
       });
 
       it("MToken name valid and symbol empty", async () => {
-        let ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = await this.mTokenRegister.ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY();
-        await expectRevert(this.mTokenRegister.createMToken("Dodge Meme 5", "  ", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY);
+        await expectRevert(this.mTokenRegister.createMToken("Dodge Meme 5", "  ", {from: summerAsCorrectCreator}), 'ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY');
       });
 
       it("MToken name and symbol are correctly stripped", async () => {
