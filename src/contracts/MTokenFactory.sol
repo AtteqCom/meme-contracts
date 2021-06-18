@@ -42,7 +42,7 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
     external
     override
     whenNotPaused
-    returns(address mTokenContract) 
+    returns(address) 
   {
     require(msg.sender == address(mTokenRegister), ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER);
   
