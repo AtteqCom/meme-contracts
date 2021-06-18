@@ -2,6 +2,8 @@
 pragma solidity 0.8.0;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
@@ -12,11 +14,21 @@ import {MTokenInterface} from "./interfaces/MTokenInterface.sol";
 /// @dev This is used only for unit tests
 contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
-  string public constant ERROR_FEE_IS_ABOVE_LIMIT = 'ERROR_FEE_IS_ABOVE_LIMIT';
+  using SafeERC20 for IERC20;
 
-  string public constant ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL = 'ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL';
+  string internal constant ERROR_FEE_IS_ABOVE_LIMIT = 'ERROR_FEE_IS_ABOVE_LIMIT';
+
+  string internal constant ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT = 'ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT';
+
+  string internal constant ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL = 'ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL';
+
+  string internal constant ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET';
+
+  string internal constant ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET';
 
   uint256 public constant ONE_MTOKEN = 1e18;
+
+  uint16 internal constant ONE_HUNDRED_PERCENT = 10000;
 
   /**
   * @dev Transaction fee applied to invest and sale prices where 1% is equal to 100. 100% equals to 10000
@@ -26,38 +38,38 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   /**
   * @dev Transaction fee limit.. limits fee to max 10% of reserveCurrency
   */
-  uint16 public transactionFeeLimit;
+  uint16 public immutable transactionFeeLimit;
 
 
   /**
   * @dev Contracts reserve currency   
   */
-  ERC20 public reserveCurrency;
+  IERC20 public immutable reserveCurrency;
 
 
   /**
   * @dev Reverse weight can not be changed after creation, one of Bancors properties   
   */
-  uint32 public reserveWeight;
+  uint32 public immutable reserveWeight;
 
 
   /**
   * @dev Bancor formula providing token minting and burning strategy   
   */
-  IBancorFormula public bancorFormula;
+  IBancorFormula public immutable bancorFormula;
 
   constructor(
     address _owner,
     uint256 _initialSupply,
     string memory _memeTokenName, 
     string memory _memeTokenSymbol,
-    ERC20 _reserveCurrency,
+    IERC20 _reserveCurrency,
     uint32 _reserveWeight,
     uint16 _fee,
     uint16 _feeLimit,
     IBancorFormula _formula) ERC20(_memeTokenName, _memeTokenSymbol)
   {
-
+    require(_feeLimit < ONE_HUNDRED_PERCENT, ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT);
     transferOwnership(_owner);
 
     _mint(address(this), _initialSupply);
@@ -87,15 +99,17 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 oldFee = transactionFee;
     transactionFee = _transactionFee;
 
-    emit TransactionFeeChanged(transactionFee, oldFee);
+    emit TransactionFeeChanged(_transactionFee, oldFee);
   }
 
   /**
   * @dev Amount of Main Currency is invested for mTokens
-  * @param _amountOfReserveCurrency amount of mTokens
+  * @param _amountOfReserveCurrency amount of reserve currency to be invested
+  * @param _minimumInvestmentTargetAmount minimum amount of mTokens gainned by this investment. if not met then fails. Fee included.
   */
   function invest(
-    uint256 _amountOfReserveCurrency
+    uint256 _amountOfReserveCurrency,
+    uint256 _minimumInvestmentTargetAmount
   )
     external
     override
@@ -106,34 +120,39 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
     uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
     uint256 mTokenAmount = bancorFormula.purchaseTargetAmount(totalSupply(), reserveBalance, reserveWeight, amountOfReserveCurrencyExcludingFee);
-    
 
-    reserveCurrency.transferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
-    reserveCurrency.transferFrom(msg.sender, owner(), fee);
+    require(mTokenAmount >= _minimumInvestmentTargetAmount, ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET);
+
+    reserveCurrency.safeTransferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
+    reserveCurrency.safeTransferFrom(msg.sender, owner(), fee);
     _mint(msg.sender, mTokenAmount);
 
-    emit Invested(msg.sender, amountOfReserveCurrencyExcludingFee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
+    emit Invested(msg.sender, fee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
   }
 
   /**
   * @dev Sell share of mTokens and get corrsponding amount of Main Currency
-    @param _amountOfMTokens amount of mTokens to sell
+  * @param _amountOfMTokens amount of mTokens to sell
+  * @param _minimumSaleTargetAmount minimum amount of reserve currency to target by sale. if not met then fails. Fee included.
   */
   function sellShare(
-    uint256 _amountOfMTokens
+    uint256 _amountOfMTokens,
+    uint256 _minimumSaleTargetAmount
   )
     external
     override
   {
-    require(balanceOf(msg.sender) >= _amountOfMTokens, ERROR_CALLER_HAS_NOT_ENOUGH_MTOKENS_TO_SELL);
-
     uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
     uint256 reserveCurrencyAmountToReturnTotal = bancorFormula.saleTargetAmount(totalSupply(), reserveBalance, reserveWeight, _amountOfMTokens);
+
+
     uint256 fee = computeFee(reserveCurrencyAmountToReturnTotal);
     uint256 reserveCurrencyAmountToReturn = reserveCurrencyAmountToReturnTotal - fee;
 
-    reserveCurrency.transfer(msg.sender, reserveCurrencyAmountToReturn);
-    reserveCurrency.transfer(owner(), fee);
+    require(reserveCurrencyAmountToReturn >= _minimumSaleTargetAmount, ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET);
+
+    reserveCurrency.safeTransfer(msg.sender, reserveCurrencyAmountToReturn);
+    reserveCurrency.safeTransfer(owner(), fee);
     _burn(msg.sender, _amountOfMTokens);
 
     emit SoldShare(msg.sender, fee, reserveCurrencyAmountToReturn, _amountOfMTokens);
@@ -224,18 +243,6 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     view
     returns (uint256)
   {
-    return amount * transactionFee / 10000;
-  }
-
-  /**
-   * @dev Returns such reserve currency amount that when substracting the fee from returned value you wil get _reserveCurrencyAmountWithoutFee
-   * @param _reserveCurrencyAmountWithoutFee reserve currency amount
-   */
-  function computeInvestmentAmountWithFee(uint256 _reserveCurrencyAmountWithoutFee)
-    public
-    view
-    returns (uint256)
-  {
-    return 10000 * _reserveCurrencyAmountWithoutFee / (10000 - transactionFee);
+    return amount * transactionFee / ONE_HUNDRED_PERCENT;
   }
 }

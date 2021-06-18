@@ -16,7 +16,7 @@ interface MTokenFactoryInterface {
   function createMToken(
     string calldata _mTokenName, string calldata _mTokenSymbol
   )
-   external returns(address mTokenContract);
+   external returns(address);
 
   /**
   * @dev Event emited when a new MTokenRegister contract is set

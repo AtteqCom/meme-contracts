@@ -3,6 +3,8 @@ pragma solidity 0.8.0;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
 import {MTokenInitialSettingInterface} from "./interfaces/MTokenInitialSettingInterface.sol";
@@ -15,6 +17,8 @@ import {StringUtils} from "./libraries/StringUtils.sol";
 /// @dev This is used only for unit tests
 contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
+  using SafeERC20 for IERC20;
+
   struct MemecoinRegistration {
     uint256 index;
     address factoryAddress;
@@ -22,25 +26,21 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   }
 
 
-  bytes32 public constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
+  bytes32 internal constant MTOKEN_FACTORY_ROLE = keccak256("MTOKEN_FACTORY_ROLE");
 
-  string public constant ERROR_MTOKEN_ADDRESS_IS_REQUIRED = 'ERROR_MTOKEN_ADDRESS_IS_REQUIRED';
-  string public constant ERROR_CALLER_IS_NOT_MTOKEN_FACTORY = 'ERROR_CALLER_IS_NOT_MTOKEN_FACTORY';
-  string public constant ERROR_FACTORY_CONTRACT_IS_NOT_SET = 'ERROR_FACTORY_CONTRACT_IS_NOT_SET';
-  string public constant ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET';
-  string public constant ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE';
-  string public constant ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE';
-  string public constant ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS';
-  string public constant ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS';
-  string public constant ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY';
-  string public constant ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY';
-  string public constant ERROR_NAME_IS_TAKEN = 'ERROR_NAME_IS_TAKEN';
-  string public constant ERROR_SYMBOL_IS_TAKEN = 'ERROR_SYMBOL_IS_TAKEN';
+  string internal constant ERROR_FACTORY_CONTRACT_IS_NOT_SET = 'ERROR_FACTORY_CONTRACT_IS_NOT_SET';
+  string internal constant ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET';
+  string internal constant ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS';
+  string internal constant ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS';
+  string internal constant ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY';
+  string internal constant ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_SYMBOL_EMPTY_OR_WHITESPACES_ONLY';
+  string internal constant ERROR_NAME_IS_TAKEN = 'ERROR_NAME_IS_TAKEN';
+  string internal constant ERROR_SYMBOL_IS_TAKEN = 'ERROR_SYMBOL_IS_TAKEN';
 
   /**
   * @dev reserve currency 
   */
-  ERC20 public memecoin;
+  IERC20 public memecoin;
 
   /**
   * @dev contract creating specific instance/version of mToken contract
@@ -117,10 +117,10 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   }
 
   /**
-  * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
-  * @param _reserveCurrency Address of new MTokenFactory contract
+  * @dev Sets new Reserve currency contract and grants MTOKEN_FACTORY_ROLE to it.
+  * @param _reserveCurrency Address of new Reserve currency contract
   */
-  function setReserveCurrency(ERC20 _reserveCurrency)
+  function setReserveCurrency(IERC20 _reserveCurrency)
     public
     onlyOwner 
   {
@@ -156,8 +156,8 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
 
   /**
-  * @dev Sets new MTokenFactory contract and grants MTOKEN_FACTORY_ROLE to it.
-  * @param _mTokenInitialSetting Address of new MTokenFactory contract
+  * @dev Sets new MTokenInitialSetting contract and grants MTOKEN_FACTORY_ROLE to it.
+  * @param _mTokenInitialSetting Address of new MTokenInitialSetting contract
   */
   function setMTokenInitialSetting(MTokenInitialSettingInterface _mTokenInitialSetting)
     public
@@ -169,7 +169,6 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
     emit MTokenInitialSettingChanged(address(mTokenInitialSetting), oldMTokenInitialSetting);
   }
-
 
 
   /**
@@ -186,8 +185,6 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   {
     require(address(0) != address(memecoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
-    require(_hasCreatorCorrectAllowance(msg.sender), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
-    require(_hasCreatorEnoughBalance(msg.sender), ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
     require(StringUtils.containsOnlyAsciiPrintableChars(_mTokenName), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
     require(StringUtils.containsOnlyAsciiPrintableChars(_mTokenSymbol), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
 
@@ -200,7 +197,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     uint256 creationPrice = mTokenInitialSetting.getCreationPrice();
 
     // pay owner price for mToken creation
-    memecoin.transferFrom(msg.sender, owner(), creationPrice);
+    memecoin.safeTransferFrom(msg.sender, owner(), creationPrice);
 
     // create
     address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
@@ -215,7 +212,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     nameHashIndex[numericHashOfTokenName] = mTokenAddress;
 
     // adds initial funds of reserveCurrency to mToken contract
-    memecoin.transferFrom(msg.sender, address(mTokenAddress), reserveCurrencyInitialSupply);
+    memecoin.safeTransferFrom(msg.sender, address(mTokenAddress), reserveCurrencyInitialSupply);
 
     emit MTokenRegistered(mTokenAddress, creationPrice, reserveCurrencyInitialSupply);
 
@@ -256,7 +253,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     }
 
     ERC20 mToken = ERC20(nameHashIndex[nameHash]);
-    return getNumericHashFromString(mToken.name()) == nameHash;
+    return true;
   }
 
   /**
@@ -280,7 +277,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     }
 
     ERC20 mToken = ERC20(symbolHashIndex[symbolHash]);
-    return getNumericHashFromString(mToken.symbol()) == symbolHash;
+    return true;
   }
 
   /**
@@ -307,25 +304,4 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     return uint256(keccak256(abi.encodePacked(StringUtils.transformToLowercase(_stringToNumericHash))));
   }
 
-  /**
-   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
-   */
-  function _hasCreatorCorrectAllowance(address creator)
-    private
-    view
-    returns(bool result)
-  {
-    return memecoin.allowance(creator, address(this)) >= getCreationTotalCosts();
-  }
-
-  /**
-   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
-   */
-  function _hasCreatorEnoughBalance(address creator)
-    private
-    view
-    returns(bool result)
-  {
-    return memecoin.balanceOf(creator) >= getCreationTotalCosts();
-  }
 }
