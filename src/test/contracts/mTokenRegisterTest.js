@@ -188,6 +188,16 @@ contract("MTokenRegisterTest", accounts => {
         expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
       });
 
+      it("Reverts 2nd name exists - lowercase check", async () => {
+        let ERROR_NAME_IS_TAKEN = await this.mTokenRegister.ERROR_NAME_IS_TAKEN();
+        await expectRevert(this.mTokenRegister.createMToken("Dodge meme", "FLP", {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
+      });
+
+      it("Reverts 2nd symbol exists - lowercase check", async () => {
+        let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
+        await expectRevert(this.mTokenRegister.createMToken("FLOP MEME", "DGMXXXx", {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+      });
+
       it("MToken name invalid and symbol valid", async () => {
         let ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = await this.mTokenRegister.ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS();
         await expectRevert(this.mTokenRegister.createMToken("Dodge\tMeme 2", "DGMXXXX2", {from: summerAsCorrectCreator}), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
