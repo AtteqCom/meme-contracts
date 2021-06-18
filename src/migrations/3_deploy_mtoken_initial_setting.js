@@ -8,11 +8,7 @@ let MTOKEN_CREATION_PRICE = (new BN(config.MTOKEN_CREATION_PRICE)).mul(ONE_COIN)
 let MTOKEN_INITIAL_SUPPLY = (new BN(config.MTOKEN_INITIAL_SUPPLY)).mul(ONE_COIN);
 let MTOKEN_RESERVE_CURRENCY_INITIAL_SUPPLY = (new BN(config.MTOKEN_RESERVE_CURRENCY_INITIAL_SUPPLY)).mul(ONE_COIN);
 
-let TEN_AS_BN = (new BN(10));
-
-
 module.exports = async function(deployer) {
-  console.log(`Migrate - creating MTokenInitialSetting`);
 
   await deployer.deploy(
     MTokenInitialSetting, 

@@ -71,15 +71,25 @@ contract("MTokenTest", accounts => {
     });
   
     it("Revert investment by low allowance", async () => {
-      await expectRevert(this.mToken.invest(new BN(1e8), {from: summerAsInvestorWithoutAllowance}), "ERC20: transfer amount exceeds allowance.");
+      let summersInvestment = new BN(1e8);
+      let minimumExpectedInvestment = await this.mToken.calculateInvestReward(summersInvestment);
+      await expectRevert(this.mToken.invest(summersInvestment, minimumExpectedInvestment, {from: summerAsInvestorWithoutAllowance}), "ERC20: transfer amount exceeds allowance.");
     });
   
     it("Revert investment by low balance", async () => {
-      await expectRevert(this.mToken.invest(new BN(1e8), {from: bethAsInvestorWithoutReserveCurrency}), "ERC20: transfer amount exceeds balance");
+      let bethInvestment = new BN(1e8);
+      let minimumExpectedInvestment = await this.mToken.calculateInvestReward(bethInvestment);
+      await expectRevert(this.mToken.invest(bethInvestment, minimumExpectedInvestment, {from: bethAsInvestorWithoutReserveCurrency}), "ERC20: transfer amount exceeds balance");
+    });
+
+    it("Revert investment by not met required minimum", async () => {
+      let minimumExpectedInvestment = await this.mToken.calculateInvestReward(MORTYs_1ST_INVESTMENT);
+      await expectRevert(this.mToken.invest(MORTYs_1ST_INVESTMENT, minimumExpectedInvestment.add(new BN(1e3)), {from: mortyAsInvestor}), "ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET");
     });
   
     it("Invest", async () => {
-      let { logs } = await this.mToken.invest(MORTYs_1ST_INVESTMENT, {from: mortyAsInvestor});
+      let minimumExpectedInvestment = await this.mToken.calculateInvestReward(MORTYs_1ST_INVESTMENT);
+      let { logs } = await this.mToken.invest(MORTYs_1ST_INVESTMENT, minimumExpectedInvestment, {from: mortyAsInvestor});
       expectEvent.inLogs(logs, 'Invested', { investor: mortyAsInvestor});
     });
   
@@ -95,13 +105,24 @@ contract("MTokenTest", accounts => {
       let { logs } = await this.mToken.setTransactionFee(SECOND_FEE, {from: rickAsMTokenOwner});
       expectEvent.inLogs(logs, 'TransactionFeeChanged', { newFee: SECOND_FEE.toString()});
     });
+
+    it("Revert sale by not met required minimum of gainned reserve currncy amount", async () => {
+      let mTokenToSell = new BN(1e3);
+      let minimumExpectedGain = await this.mToken.calculateSellShareReward(mTokenToSell);
+      await expectRevert(this.mToken.sellShare(mTokenToSell, minimumExpectedGain.add(new BN(1e2)), {from: mortyAsInvestor}), "ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET");
+    });
   
     it("Sell share", async () => {
+      let mTokenToSell = new BN(1e3);
       let currentBalance = await this.memecoin.balanceOf(mortyAsInvestor);
+      let currentMTokenBalance = await this.mToken.balanceOf(mortyAsInvestor);
+      let expectedReserveCurrencyToGain = await this.mToken.calculateSellShareReward(mTokenToSell);
       this.rickAsMTokenOwnerBalanceBeforeTest = await this.memecoin.balanceOf(rickAsMTokenOwner);
 
-      let { logs } = await this.mToken.sellShare(100, {from: mortyAsInvestor});
+      let { logs } = await this.mToken.sellShare(mTokenToSell, expectedReserveCurrencyToGain, {from: mortyAsInvestor});
       expectEvent.inLogs(logs, 'SoldShare', { investor: mortyAsInvestor});
+      assert.equal(currentMTokenBalance.sub(mTokenToSell).toString(), await this.mToken.balanceOf(mortyAsInvestor));
+      assert.equal(expectedReserveCurrencyToGain.toString(), (await this.memecoin.balanceOf(mortyAsInvestor)).sub(currentBalance));
     });
   
     it("Revert pause when called by not owner", async () => {
@@ -114,12 +135,20 @@ contract("MTokenTest", accounts => {
     });
   
     it("Revert investment when paused", async () => {
-      await expectRevert(this.mToken.invest(new BN(1e2), {from: mortyAsInvestor}), "Pausable: paused");
+      let mortyInvestment = new BN(1e2);
+      let mortyInvestmentMinimumGain = await this.mToken.calculateInvestReward(mortyInvestment);
+
+      await expectRevert(this.mToken.invest(mortyInvestment, mortyInvestmentMinimumGain, {from: mortyAsInvestor}), "Pausable: paused");
     });
   
     it("Sell share when paused", async () => {
-      let { logs } = await this.mToken.sellShare(100, {from: mortyAsInvestor});
+      let mTokenToSell = new BN(1e2);
+      let expectedReserveCurrencyToGain = await this.mToken.calculateSellShareReward(mTokenToSell);
+      let currentBalance = await this.memecoin.balanceOf(mortyAsInvestor);
+
+      let { logs } = await this.mToken.sellShare(mTokenToSell, expectedReserveCurrencyToGain, {from: mortyAsInvestor});
       expectEvent.inLogs(logs, 'SoldShare', { investor: mortyAsInvestor});
+      assert.equal(expectedReserveCurrencyToGain.toString(), (await this.memecoin.balanceOf(mortyAsInvestor)).sub(currentBalance));
     });
 
     it("unpauseMinting", async () => {
@@ -132,7 +161,7 @@ contract("MTokenTest", accounts => {
       let amountToInvest = new BN(1e6 + 140);
 
       let rewardEstimate = await this.mToken.calculateInvestReward(amountToInvest);
-      await this.mToken.invest(amountToInvest, {from: mortyAsInvestor});
+      await this.mToken.invest(amountToInvest, rewardEstimate, {from: mortyAsInvestor});
 
       let balanceAfterInvestment = await this.mToken.balanceOf(mortyAsInvestor);
 
@@ -140,14 +169,16 @@ contract("MTokenTest", accounts => {
     });
 
     it("Estimate the sell share reward", async () => {
-      await this.mToken.invest(new BN(1e10), {from: mortyAsInvestor});
-      await this.mToken.invest(new BN(147), {from: jerryAsLoser});
+      let mortisCurveChangeInvestment = new BN(1e10);
+      let jerryCurveChangeInvestment = new BN(147);
+      await this.mToken.invest(mortisCurveChangeInvestment, await this.mToken.calculateInvestReward(mortisCurveChangeInvestment), {from: mortyAsInvestor});
+      await this.mToken.invest(jerryCurveChangeInvestment, await this.mToken.calculateInvestReward(jerryCurveChangeInvestment), {from: jerryAsLoser});
 
       let balanceBeforeSellingShare = await this.memecoin.balanceOf(mortyAsInvestor);
       let amountToSell = new BN(1e2 + 123);
 
       let rewardEstimate = await this.mToken.calculateSellShareReward(amountToSell);
-      await this.mToken.sellShare(amountToSell, {from: mortyAsInvestor});
+      await this.mToken.sellShare(amountToSell, rewardEstimate, {from: mortyAsInvestor});
 
       let balanceAfterSellingShare = await this.memecoin.balanceOf(mortyAsInvestor);
 
