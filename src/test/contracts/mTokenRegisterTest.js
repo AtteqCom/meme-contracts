@@ -105,11 +105,11 @@ contract("MTokenRegisterTest", accounts => {
       });
   
       it("Reverts when creator has not set enough allowance", async () => {
-        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE');
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: rickAsNotEnoughAllowance}), 'ERC20: transfer amount exceeds balance');
       });
 
       it("Reverts when creator has not enough balance", async () => {
-        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: mortyAsNotEnoughBalance}), 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE');
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: mortyAsNotEnoughBalance}), 'ERC20: transfer amount exceeds balance');
       });
   
       it("Creates new MToken", async () => {
