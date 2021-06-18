@@ -30,8 +30,6 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
   string internal constant ERROR_FACTORY_CONTRACT_IS_NOT_SET = 'ERROR_FACTORY_CONTRACT_IS_NOT_SET';
   string internal constant ERROR_MEME_COIN_CONTRACT_IS_NOT_SET = 'ERROR_MEME_COIN_CONTRACT_IS_NOT_SET';
-  string internal constant ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE';
-  string internal constant ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE = 'ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE';
   string internal constant ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS';
   string internal constant ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS = 'ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS';
   string internal constant ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY = 'ERROR_MEME_TOKEN_NAME_EMPTY_OR_WHITESPACES_ONLY';
@@ -187,8 +185,6 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   {
     require(address(0) != address(memecoin), ERROR_MEME_COIN_CONTRACT_IS_NOT_SET);
     require(address(0) != address(mTokenFactory), ERROR_FACTORY_CONTRACT_IS_NOT_SET);
-    require(_hasCreatorCorrectAllowance(msg.sender), ERROR_CREATOR_ALLOWANCE_LOWER_THAN_CREATION_PRICE);
-    require(_hasCreatorEnoughBalance(msg.sender), ERROR_CREATOR_BALANCE_LOWER_THAN_CREATION_PRICE);
     require(StringUtils.containsOnlyAsciiPrintableChars(_mTokenName), ERROR_MEME_TOKEN_NAME_CONTAINS_INVALID_CHARS);
     require(StringUtils.containsOnlyAsciiPrintableChars(_mTokenSymbol), ERROR_MEME_TOKEN_SYMBOL_CONTAINS_INVALID_CHARS);
 
@@ -308,25 +304,4 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     return uint256(keccak256(abi.encodePacked(StringUtils.transformToLowercase(_stringToNumericHash))));
   }
 
-  /**
-   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
-   */
-  function _hasCreatorCorrectAllowance(address creator)
-    private
-    view
-    returns(bool result)
-  {
-    return memecoin.allowance(creator, address(this)) >= getCreationTotalCosts();
-  }
-
-  /**
-   * Returns the position of first not-space character in the string. Returns _bStr.length if the string consists only of space chars.
-   */
-  function _hasCreatorEnoughBalance(address creator)
-    private
-    view
-    returns(bool result)
-  {
-    return memecoin.balanceOf(creator) >= getCreationTotalCosts();
-  }
 }
