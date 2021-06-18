@@ -11,7 +11,9 @@ const MTokenInitialSetting = artifacts.require("./MTokenInitialSetting.sol");
 const config = require('../../config');
 
 const DODGDE_MTOKEN_NAME = 'DodgeMToken';
+const DODGDE_MTOKEN_NAME_LOWERCASE = 'dodgemtoken';
 const DODGDE_MTOKEN_SYMBOL = 'DGMT';
+const DODGDE_MTOKEN_SYMBOL_LOWERCASE = 'dgmt';
 const COOLPANDA_MTOKEN_NAME = 'COOLPANDA';
 const COOLPANDA_MTOKEN_SYMBOL = 'CLP';
 
@@ -122,6 +124,7 @@ contract("MTokenRegisterTest", accounts => {
         expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
       });
 
+
       it("Owner gets paid", async () => {
         //  set up allowance first
         let ownerAsCorrectCreatorBalance = await this.memecoin.balanceOf(owner);
@@ -149,6 +152,16 @@ contract("MTokenRegisterTest", accounts => {
       it("Reverts symbol exists", async () => {
         let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
         await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
+      });
+
+      it("Reverts name exists - lowercase check", async () => {
+        let ERROR_NAME_IS_TAKEN = await this.mTokenRegister.ERROR_NAME_IS_TAKEN();
+        await expectRevert(this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME_LOWERCASE, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator}), ERROR_NAME_IS_TAKEN);
+      });
+
+      it("Reverts symbol exists - lowercase check", async () => {
+        let ERROR_SYMBOL_IS_TAKEN = await this.mTokenRegister.ERROR_SYMBOL_IS_TAKEN();
+        await expectRevert(this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL_LOWERCASE, {from: summerAsCorrectCreator}), ERROR_SYMBOL_IS_TAKEN);
       });
 
       it("Creates another cool MToken", async () => {

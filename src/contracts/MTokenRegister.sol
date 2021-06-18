@@ -259,7 +259,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     }
 
     ERC20 mToken = ERC20(nameHashIndex[nameHash]);
-    return getNumericHashFromString(mToken.name()) == nameHash;
+    return true;
   }
 
   /**
@@ -283,7 +283,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     }
 
     ERC20 mToken = ERC20(symbolHashIndex[symbolHash]);
-    return getNumericHashFromString(mToken.symbol()) == symbolHash;
+    return true;
   }
 
   /**
