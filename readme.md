@@ -10,7 +10,8 @@ contracts in docker containers.
 ### Docker
 
 1. Run `docker-compose build` in root directory of repository.
-2. `docker-compose up -d`
+2. Copy `.env.template` to `.env` and fill `.env` with desired config values
+3. `docker-compose up -d`
 
 note: `src` and `build` folders are mounted to contianer.
 
