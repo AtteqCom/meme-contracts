@@ -28,7 +28,7 @@ module.exports = {
       network_id: 5,
     },
     mumbai: { // must be a web3-1.0.0, otherwise truffle commands may hang in CI
-      provider: () => new HDWalletProvider(process.env.WALLET_PASSWORD, "https://rpc-mumbai.matic.today"),
+      provider: () => new HDWalletProvider(process.env.WALLET_PASSWORD, "https://rpc-mumbai.maticvigil.com"),
       network_id: 80001,
       confirmations: 2,
       timeoutBlocks: 200,
