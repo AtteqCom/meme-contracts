@@ -1,29 +1,3 @@
-/**
- * Outputs chart data where:
- *   `x` contains transaction number
- *   `y` contains estiamted sell share reward for one mToken
- * 
- * To run the script, execute the following:
- *   `npx truffle build && npx truffle migrate --reset && npx truffle exec ./scripts/simulateInvestsAndSells.js`
- * 
- * The script will output the described data on the standard output. It is outputed in such format 
- *  that is easily interpreted by e.g. `gnuplot` tool, just put it inside the following command:
- *  `echo "<CHART_DATA>" | gnuplot -p -e 'plot "/dev/stdin" using 1:2 with lines'`
- * 
- * The script accepts 4 parameters: 
- *   - The first parameter defines how many investments shall be executed (number of datapoints in the chart), 
- *     the default value is 100
- *   - The second parameter specifies percentage of investments (as opposed to sells), the default is 70. [Be 
- *     careful with less than 50 values, because we cant drop below 0 total invested amount]
- *   - The third parameter specifies minimal investment amount in MEM, the default is 1
- *   - The fourth parameter specifies maximal investment amount in MEM, the default is 1000
- *     [The invested/sold amount is computed as a random number between the given boundaries for each tx separately]
- * 
- * Example of executing the script with parameters: `npx truffle exec ./scripts/simulateInvestsAndSells.js 1000 75 10 250`.
- *  The parameters order cannot be changed, sorry :(
- * 
- * NOTE: all the values on outputs and inputs are *not* in wei.
- */
 const Memecoin = artifacts.require("Memecoin");
 const MTokenRegister = artifacts.require("MTokenRegister");
 const MToken = artifacts.require("MToken");

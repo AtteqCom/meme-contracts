@@ -1,25 +1,3 @@
-/**
- * Outputs chart data where:
- *   `x` contains totalSupply
- *   `y` contains estiamted sell share reward for one mToken
- * 
- * To run the script, execute the following:
- *   `npx truffle build && npx truffle migrate --reset && npx truffle exec ./scripts/simulateInvestsOnly.js`
- * 
- * The script will output the described data on the standard output. It is outputed in such format 
- *  that is easily interpreted by e.g. `gnuplot` tool, just put it inside the following command:
- *  `echo "<CHART_DATA>" | gnuplot -p -e 'plot "/dev/stdin" using 1:2 with lines'`
- * 
- * The script accepts 2 parameters: 
- *   - The first parameter defines how many investments shall be executed  (number of datapoints in the chart), 
- *     the default value is 100
- *   - The second parameter specifies how much MEM is invested in each step (the default is 100)
- *  
- * Example of executing the script with parameters: `npx truffle exec ./scripts/simulateInvestsOnly.js 1000 10`.
- *  The parameters order cannot be changed, sorry :(
- * 
- * NOTE: all the values on outputs and inputs are *not* in wei.
- */
 const Memecoin = artifacts.require("Memecoin");
 const MTokenRegister = artifacts.require("MTokenRegister");
 const MToken = artifacts.require("MToken");
@@ -56,7 +34,7 @@ module.exports = async function(callback) {
     console.log(`Simulating invests...`)
     const data = [];
     const investAmountInStep = ONE_TO_WEI.muln(investmentPerStep);
-    await memecoin.approve(mToken.address, web3.utils.toBN(ONE_TO_WEI.muln(dataSize).muln(investAmountInStep).muln(100)));
+    await memecoin.approve(mToken.address, web3.utils.toBN(investAmountInStep.muln(dataSize)));
 
     for (let i = 0; i < dataSize; i++) {
       data.push({

@@ -1,25 +1,3 @@
-/**
- * Outputs chart data where:
- *   `x` contains reserve currency amount
- *   `y` contains estimated sell share reward for one mToken
- * 
- * To run the script, execute the following:
- *   `npx truffle build && npx truffle migrate --reset && npx truffle exec ./scripts/simulateReserveCurrencyChanges.js`
- * 
- * The script will output the described data on the standard output. It is outputed in such format 
- *  that is easily interpreted by e.g. `gnuplot` tool, just put it inside the following command:
- *  `echo "<CHART_DATA>" | gnuplot -p -e 'plot "/dev/stdin" using 1:2 with lines'`
- * 
- * The script accepts 1 parameter:
- *   - The first parameter defines how many transfers of the reserve currency to the mToken shall be executed 
- *     (number of datapoints in the chart), the default value is 100
- *   - The second parameter defines how much of the reserve currency should be transfered to the mToken at each
- *     transfer, the default is 10
- * 
- * Example of executing the script with parameters: `npx truffle exec ./scripts/simulateReserveCurrencyChanges.js 150 1000 2000`/
- * 
- * NOTE: all the values on outputs and inputs are *not* in wei.
- */
 const Memecoin = artifacts.require("Memecoin");
 const MTokenInitialSetting = artifacts.require("MTokenInitialSetting");
 const MTokenRegister = artifacts.require("MTokenRegister");
@@ -53,7 +31,7 @@ module.exports = async function(callback) {
     console.log("Deploying MToken contract...")
     const creationPrice = await mTokenRegister.getCreationTotalCosts();
     await memecoin.approve(mTokenRegister.address, creationPrice);
-    const mTokenResult = await mTokenRegister.createMToken("mTestToken58", "MTT58");
+    const mTokenResult = await mTokenRegister.createMToken("mTestToken", "MTT");
     const mTokenAddress = mTokenResult.logs[2].args.mTokenContract;
     console.log(`Deployed at ${mTokenAddress}`)
     
