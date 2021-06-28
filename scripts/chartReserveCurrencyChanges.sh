@@ -19,6 +19,7 @@
 #  * NOTE: all the values on outputs and inputs are *not* in wei.
 #  */
 
+docker-compose up -d
 docker-compose exec builder npx truffle build 
 docker-compose exec builder npx truffle migrate --reset 
 docker-compose exec builder npx truffle exec ./scripts/simulateReserveCurrencyChanges.js $@ > chart_data_raw.txt

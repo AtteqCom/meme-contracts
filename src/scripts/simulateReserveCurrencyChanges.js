@@ -31,7 +31,8 @@ module.exports = async function(callback) {
     console.log("Deploying MToken contract...")
     const creationPrice = await mTokenRegister.getCreationTotalCosts();
     await memecoin.approve(mTokenRegister.address, creationPrice);
-    const mTokenResult = await mTokenRegister.createMToken("mTestToken", "MTT");
+    const mTokenNumber = Math.random();
+    const mTokenResult = await mTokenRegister.createMToken(`mTestToken-${mTokenNumber}`, `MTT-${mTokenNumber}`);
     const mTokenAddress = mTokenResult.logs[2].args.mTokenContract;
     console.log(`Deployed at ${mTokenAddress}`)
     

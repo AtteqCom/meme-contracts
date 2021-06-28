@@ -32,18 +32,21 @@ module.exports = async function(callback) {
     console.log("Deploying MToken contract...")
     const creationPrice = await mTokenRegister.getCreationTotalCosts();
     await memecoin.approve(mTokenRegister.address, creationPrice);
-    const mTokenResult = await mTokenRegister.createMToken("mTestToken", "MTT");
+    const mTokenNumber = Math.random();
+    const mTokenResult = await mTokenRegister.createMToken(`mTestToken-${mTokenNumber}`, `MTT-${mTokenNumber}`);
     const mTokenAddress = mTokenResult.logs[2].args.mTokenContract;
     console.log(`Deployed at ${mTokenAddress}`)
     const mToken = await MToken.at(mTokenAddress);
     
     console.log(`Simulating transactions...`)
     const data = [];
+    let lastAveragePrice = web3.utils.toBN(0);
 
     for (let i = 0; i < dataSize; i++) {
       data.push({
         x: i,
-        y: await mToken.calculateSellShareReward(ONE_TO_WEI)
+        y_contract: await mToken.calculateSellShareReward(ONE_TO_WEI),
+        y_average: lastAveragePrice,
       })
 
       const isInvest = Math.random() <= investmentTxPercentage;
@@ -52,12 +55,22 @@ module.exports = async function(callback) {
         const investedAmountWei = web3.utils.toBN(ONE_TO_WEI.muln(investedAmount));
         await memecoin.approve(mToken.address, investedAmountWei);
 
-        await mToken.invest(investedAmountWei, web3.utils.toBN('0'))
+        const result = await mToken.invest(investedAmountWei, web3.utils.toBN('0'))
+
+        const investLog = result.logs[5].args;
+        const totalPrice = investLog.investmentInReserveCurrency.add(investLog.feeInReserveCurrency);
+        const averagePriceInWei = totalPrice.div(investLog.gainedAmountOfMTokens);
+        lastAveragePrice = averagePriceInWei.mul(ONE_TO_WEI);
       } else {
         const soldPercentage = Math.floor(Math.random() * 10000);
         const soldAmount = (await mToken.balanceOf(walletAddress)).muln(soldPercentage).divn(10000);
 
-        await mToken.sellShare(soldAmount, web3.utils.toBN('0'))
+        const result = await mToken.sellShare(soldAmount, web3.utils.toBN('0'))
+
+        const investLog = result.logs[3].args;
+        const totalPrice = investLog.revenueInReserveCurrency.add(investLog.feeInReserveCurrency);
+        const averagePriceInWei = totalPrice.div(investLog.amountSoldOfMTokens);
+        lastAveragePrice = averagePriceInWei.mul(ONE_TO_WEI);
       }
       if (i % 50 == 0) {
         console.log(`Simulated ${i} steps...`);
@@ -66,7 +79,7 @@ module.exports = async function(callback) {
 
     console.log("Printing chart data:")
     for (let i = 0; i < data.length; i++) {
-      console.log(`${data[i].x} ${weiToReadable(data[i].y)}`)
+      console.log(`${data[i].x} ${weiToReadable(data[i].y_contract)} ${weiToReadable(data[i].y_average)}`)
     }
 
     console.log("To create chart, copy the output after `printing chart data` statement into the <CHART_DATA> in the following command")

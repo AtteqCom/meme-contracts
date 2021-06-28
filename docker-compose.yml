@@ -16,6 +16,7 @@ builder:
     - "./src/contracts-flatten:/marblegame/contracts-flatten"
     - "./src/migrations:/marblegame/migrations"
     - "./src/test:/marblegame/test"
+    - "./src/scripts:/marblegame/scripts"
 ganache:
   image: trufflesuite/ganache-cli:latest
   command: ganache -p 8545 -h 0.0.0.0

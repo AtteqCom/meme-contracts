@@ -25,7 +25,8 @@ module.exports = async function(callback) {
     console.log("Deploying MToken contract...")
     const creationPrice = await mTokenRegister.getCreationTotalCosts();
     await memecoin.approve(mTokenRegister.address, creationPrice);
-    const mTokenResult = await mTokenRegister.createMToken("mTestToken", "MTT");
+    const mTokenNumber = Math.random();
+    const mTokenResult = await mTokenRegister.createMToken(`mTestToken-${mTokenNumber}`, `MTT-${mTokenNumber}`);
     const mTokenAddress = mTokenResult.logs[2].args.mTokenContract;
     console.log(`Deployed at ${mTokenAddress}`)
     const mToken = await MToken.at(mTokenAddress);
@@ -35,24 +36,31 @@ module.exports = async function(callback) {
     const data = [];
     const investAmountInStep = ONE_TO_WEI.muln(investmentPerStep);
     await memecoin.approve(mToken.address, web3.utils.toBN(investAmountInStep.muln(dataSize)));
+    let lastAveragePrice = web3.utils.toBN(0);
 
     for (let i = 0; i < dataSize; i++) {
       data.push({
         x: (await mToken.totalSupply()),
         // x: investAmountInStep.muln(i),
         // y: await mToken.calculateInvestReward(ONE_TO_WEI)
-        y: await mToken.calculateSellShareReward(ONE_TO_WEI)
+        y_contract: await mToken.calculateSellShareReward(ONE_TO_WEI),
+        y_average: lastAveragePrice,
       })
 
-      await mToken.invest(investAmountInStep, web3.utils.toBN('0'))
+      const result = await mToken.invest(investAmountInStep, web3.utils.toBN('0'))
       if (i % 50 == 0) {
         console.log(`Simulated ${i} steps...`);
       }
+
+      const investLog = result.logs[5].args;
+      const totalPrice = investLog.investmentInReserveCurrency.add(investLog.feeInReserveCurrency);
+      const averagePriceInWei = totalPrice.div(investLog.gainedAmountOfMTokens);
+      lastAveragePrice = averagePriceInWei.mul(ONE_TO_WEI);
     }
 
     console.log("Printing chart data:")
     for (let i = 0; i < data.length; i++) {
-      console.log(`${weiToReadable(data[i].x)} ${weiToReadable(data[i].y)}`)
+      console.log(`${weiToReadable(data[i].x)} ${weiToReadable(data[i].y_contract)} ${weiToReadable(data[i].y_average)}`)
     }
 
     console.log("To create chart, copy the output after `printing chart data` statement into the <CHART_DATA> in the following command")
