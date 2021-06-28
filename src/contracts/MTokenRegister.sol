@@ -19,7 +19,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
   using SafeERC20 for IERC20;
 
-  struct MemecoinRegistration {
+  struct MTokenRegistration {
     uint256 index;
     address factoryAddress;
     address creator;
@@ -55,9 +55,9 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
  
   /**
   * @dev holds symbolic mToken registration IDs mapped to mToken contract addresses
-  * (address) 0..n => MemecoinRegistration (mToken contract addresses)
+  * (address) 0..n => MTokenRegistration (mToken contract addresses)
   */
-  mapping(address => MemecoinRegistration) public mTokenRegister;
+  mapping(address => MTokenRegistration) public mTokenRegister;
   address[] public memecoinRegisterIndex;
 
   /**
@@ -207,7 +207,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenSymbol);
 
     memecoinRegisterIndex.push(mTokenAddress);
-    mTokenRegister[mTokenAddress] = MemecoinRegistration(memecoinRegisterIndex.length, address(mTokenFactory), msg.sender);
+    mTokenRegister[mTokenAddress] = MTokenRegistration(memecoinRegisterIndex.length, address(mTokenFactory), msg.sender);
     symbolHashIndex[numericHashOfTokenSymbolName] = mTokenAddress;
     nameHashIndex[numericHashOfTokenName] = mTokenAddress;
 

@@ -46,18 +46,6 @@ contract MemecoinMatic is Memecoin {
     _burn(msg.sender, amount);
   }
 
-    /**
-  * @dev Allows address with granted MINTER_ROLE to mint a number of coins
-  * @param _account Address where will minted coins appear
-  * @param _amount Amount of coins to mint
-  */
-  function mint(address _account, uint256 _amount)
-    external
-    override
-  {
-    revert("ERROR_CHILD_TOKEN_DOES_NOT_ALLOW_DIRECT_MINTING");
-  }
-
   /**
   * @dev Allows address to burn a number of coins in its ownership
   * @param _amount Amount of coins to burn

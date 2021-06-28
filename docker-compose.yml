@@ -8,9 +8,12 @@ builder:
   environment:
     SET_CONTAINER_TIMEZONE: 'True'
     CONTAINER_TIMEZONE: Europe/Prague
+  env_file:
+    .env
   volumes:
     - "./build/:/marblegame/build"
     - "./src/contracts:/marblegame/contracts"
+    - "./src/contracts-flatten:/marblegame/contracts-flatten"
     - "./src/migrations:/marblegame/migrations"
     - "./src/test:/marblegame/test"
 ganache:
