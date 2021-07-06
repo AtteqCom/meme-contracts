@@ -32,7 +32,7 @@ contract VestingVault is Ownable {
      */
     uint16 public vestingGranularityDays;
 
-    constructor(ERC20 _token, uint16 _vestingGranularityDays) public {
+    constructor(ERC20 _token, uint16 _vestingGranularityDays) {
         require(address(_token) != address(0));
         token = _token;
         vestingGranularityDays = _vestingGranularityDays;
@@ -113,12 +113,12 @@ contract VestingVault is Ownable {
         emit GrantRevoked(_recipient, amountVested, amountNotVested);
     }
 
-    function getGrantStartTime(address _recipient) public view returns(uint256) {
+    function getGrantStartTime(address _recipient) external view returns(uint256) {
         Grant storage tokenGrant = tokenGrants[_recipient];
         return tokenGrant.startTime;
     }
 
-    function getGrantAmount(address _recipient) public view returns(uint256) {
+    function getGrantAmount(address _recipient) external view returns(uint256) {
         Grant storage tokenGrant = tokenGrants[_recipient];
         return tokenGrant.amount;
     }
