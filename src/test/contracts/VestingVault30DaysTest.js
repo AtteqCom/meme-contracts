@@ -167,8 +167,11 @@ contract('VestingVault with 30d period', function ([owner, other]) {
     it('can claim vested tokens', async function () {
         await this.vault.addTokenGrant(other, 1000, 300, 0);
         expect((await this.token.balanceOf(other)).toString()).to.equal("0");
-        await time.increase(time.duration.days(90));
+        await time.increase(time.duration.days(30));
         await this.vault.claimVestedTokens({ from: other })
+        expect((await this.token.balanceOf(other)).toString()).to.equal("100");
+        await time.increase(time.duration.days(60));
+        await this.vault.claimVestedTokens({ from: other });
         expect((await this.token.balanceOf(other)).toString()).to.equal("300");
     });
 
