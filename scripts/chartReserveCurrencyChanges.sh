@@ -19,10 +19,6 @@
 #  * NOTE: all the values on outputs and inputs are *not* in wei.
 #  */
 
+mkdir -p charts
 docker-compose up -d
-docker-compose exec builder npx truffle build 
-docker-compose exec builder npx truffle migrate --reset 
-docker-compose exec builder npx truffle exec ./scripts/simulateReserveCurrencyChanges.js $@ > chart_data_raw.txt
-
-DATA_START_LINE=`cat chart_data_raw.txt | grep -n "Printing chart data:" | cut -d ':' -f1`
-cat chart_data_raw.txt | tail -n +$DATA_START_LINE | head -n -2 | gnuplot -p -e 'plot "/dev/stdin" using 1:2 with lines'
+docker-compose exec builder sh ./scripts_container/chartReserveCurrencyChanges.sh $@

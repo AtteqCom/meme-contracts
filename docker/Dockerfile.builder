@@ -6,4 +6,6 @@ WORKDIR /marblegame
 COPY ./package.json /marblegame
 RUN npm install
 
+RUN apt update && apt install -y gnuplot
+
 COPY ./src /marblegame

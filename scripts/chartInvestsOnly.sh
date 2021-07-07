@@ -19,13 +19,6 @@
 #  * NOTE: all the values on outputs and inputs are *not* in wei.
 #  */
 
+mkdir -p charts
 docker-compose up -d
-docker-compose exec builder npx truffle build 
-docker-compose exec builder npx truffle migrate --reset 
-docker-compose exec builder npx truffle exec ./scripts/simulateInvestsOnly.js $@ > chart_data_raw.txt
-
-DATA_START_LINE=`cat chart_data_raw.txt | grep -n "Printing chart data:" | cut -d ':' -f1`
-cat chart_data_raw.txt | tail -n +$DATA_START_LINE | head -n -2 > chart_data.txt
-gnuplot -p -e 'plot "chart_data.txt" using 1:2 with lines title "Contract estimate", "chart_data.txt" using 1:3 with lines title "Average estimate"'
-rm ./chart_data_raw.txt
-rm ./chart_data.txt
+docker-compose exec builder sh ./scripts_container/chartInvestsOnly.sh $@
