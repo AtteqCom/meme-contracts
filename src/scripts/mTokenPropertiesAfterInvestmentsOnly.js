@@ -6,11 +6,12 @@ const MToken = artifacts.require("MToken");
 const ONE_TO_WEI = web3.utils.toBN("1000000000000000000");
 
 const INVESTMENTS_IN_M_TOKEN_BOUNDARIES = [0, 1, 10000, 75000, 100000, 130000, 260000];
-const OUTPUT_CSV_FILE = '/marblegame/charts/mTokenPropertiesAfterInvestmentsOnly.csv';
 
 module.exports = async function(callback) {
   try {
     console.log("STARTING SIMULATIONS!\n\n")
+
+    const outputCsvFile = process.argv[4];
     
     const admin = (await web3.eth.getAccounts())[0];
     const investor = (await web3.eth.getAccounts())[1];
@@ -51,7 +52,7 @@ module.exports = async function(callback) {
       });
     }
 
-    await writeToCsvFile(OUTPUT_CSV_FILE, data, ['total_investment_in_MEM', 'm_token_total_supply', 'm_token_sell_price_in_MEM']);
+    await writeToCsvFile(outputCsvFile, data, ['total_investment_in_MEM', 'm_token_total_supply', 'm_token_sell_price_in_MEM']);
 
     callback();
   } catch (e) {
