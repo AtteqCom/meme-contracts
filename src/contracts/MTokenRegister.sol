@@ -14,7 +14,7 @@ import {StringUtils} from "./libraries/StringUtils.sol";
 
 
 /// @title ERC721 token
-/// @dev This is used only for unit tests
+/// @dev Contract managing register of mToken contracts
 contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
   using SafeERC20 for IERC20;

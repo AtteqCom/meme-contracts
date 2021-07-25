@@ -11,7 +11,7 @@ import {IBancorFormula} from "./bancor/IBancorFormula.sol";
 import {MTokenInterface} from "./interfaces/MTokenInterface.sol";
 
 /// @title ERC20 token
-/// @dev This is used only for unit tests
+/// @dev Memetic token contract with self-curation of buying and selling it
 contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   using SafeERC20 for IERC20;
