@@ -55,10 +55,10 @@ module.exports = async function(callback) {
         const investedAmountWei = web3.utils.toBN(ONE_TO_WEI.muln(investedAmount));
         await memecoin.approve(mToken.address, investedAmountWei);
 
-        const result = await mToken.invest(investedAmountWei, web3.utils.toBN('0'))
+        const result = await mToken.buy(investedAmountWei, web3.utils.toBN('0'))
 
         const investLog = result.logs[5].args;
-        const totalPrice = investLog.investmentInReserveCurrency.add(investLog.feeInReserveCurrency);
+        const totalPrice = investLog.buyInReserveCurrency.add(investLog.feeInReserveCurrency);
         const averagePriceInWei = totalPrice.div(investLog.gainedAmountOfMTokens);
         lastAveragePrice = averagePriceInWei.mul(ONE_TO_WEI);
       } else {

@@ -55,13 +55,13 @@ transferMemFromAdmin = async (memecoin, to, memAmount) => {
   await memecoin.transfer(to, memAmountWei);
 }
 
-const investMem = async (memecoin, mToken, investor, memAmount) => {
+const buyMTokens = async (memecoin, mToken, investor, memAmount) => {
   const investedAmountWei = ONE_TO_WEI.muln(memAmount);
   await memecoin.approve(mToken.address, investedAmountWei, {from: investor});
-  const result = await mToken.invest(investedAmountWei, 1, {from: investor});
+  const result = await mToken.buy(investedAmountWei, 1, {from: investor});
 
-  const investLog = result.logs[5].args;
-  const gainedMTokens = investLog.gainedAmountOfMTokens;
+  const buyLog = result.logs[5].args;
+  const gainedMTokens = buyLog.gainedAmountOfMTokens;
 
   return gainedMTokens;
 }
@@ -91,9 +91,9 @@ const deployMToken = async (memecoin, mTokenRegister, name, symbol) => {
 const simulationA = async (memecoin, mTokenRegister, admin, investor) => {
   const mToken = await deployMToken(memecoin, mTokenRegister, `simulation-A-${Date.now()}`, `xsa-${Date.now()}`);
 
-  const gainedMTokensAtStart = await investMem(memecoin, mToken, investor, 1000);
-  await investMem(memecoin, mToken, admin, 130000);
-  const gainedMTokensAfter130k = await investMem(memecoin, mToken, investor, 1000);
+  const gainedMTokensAtStart = await buyMTokens(memecoin, mToken, investor, 1000);
+  await buyMTokens(memecoin, mToken, admin, 130000);
+  const gainedMTokensAfter130k = await buyMTokens(memecoin, mToken, investor, 1000);
   console.log(
 `
 \n\nSIMULATION A - what happens to a person that invests 1000 MEM when started and when 130k is invested.
@@ -107,10 +107,10 @@ Gained mTokens after 130k: ${weiToReadable(gainedMTokensAfter130k)}
 const simulationB = async (memecoin, mTokenRegister, admin, investor) => {
   const mToken = await deployMToken(memecoin, mTokenRegister, `simulation-B-${Date.now()}`, `xsb-${Date.now()}`);
 
-  await investMem(memecoin, mToken, admin, 75000);
-  const from75kTo100kGainedMTokens = await investMem(memecoin, mToken, admin, 25000);
-  const from100kTo130kGainedMTokens = await investMem(memecoin, mToken, admin, 30000);
-  const investorMTokens = await investMem(memecoin, mToken, investor, 1000);
+  await buyMTokens(memecoin, mToken, admin, 75000);
+  const from75kTo100kGainedMTokens = await buyMTokens(memecoin, mToken, admin, 25000);
+  const from100kTo130kGainedMTokens = await buyMTokens(memecoin, mToken, admin, 30000);
+  const investorMTokens = await buyMTokens(memecoin, mToken, investor, 1000);
 
   const memWeiValueAfterInvestment = await estimateSellShare(mToken, investorMTokens);
   const balanceAfter131kInvestment = await memecoin.balanceOf(mToken.address);
@@ -142,16 +142,16 @@ Investment value at 75k: ${weiToReadable(memWeivalueAt75k)} MEM
 const simulationC = async (memecoin, mTokenRegister, admin, investor) => {
   const mToken = await deployMToken(memecoin, mTokenRegister, `simulation-C-${Date.now()}`, `xsc-${Date.now()}`);
 
-  await investMem(memecoin, mToken, admin, 130000);
-  const investorMTokens = await investMem(memecoin, mToken, investor, 1000);
+  await buyMTokens(memecoin, mToken, admin, 130000);
+  const investorMTokens = await buyMTokens(memecoin, mToken, investor, 1000);
   const memWeiValueAfterInvestment = await estimateSellShare(mToken, investorMTokens);
   const balanceAfter131kInvestment = await memecoin.balanceOf(mToken.address);
 
-  await investMem(memecoin, mToken, admin, 69000);
+  await buyMTokens(memecoin, mToken, admin, 69000);
   const memWeivalueAt200k = await estimateSellShare(mToken, investorMTokens)
   const balanceAfter200kInvestment = await memecoin.balanceOf(mToken.address);
 
-  await investMem(memecoin, mToken, admin, 60000);
+  await buyMTokens(memecoin, mToken, admin, 60000);
   const memWeivalueAt260k = await estimateSellShare(mToken, investorMTokens)
   const balanceAfter260kInvestment = await memecoin.balanceOf(mToken.address);
 

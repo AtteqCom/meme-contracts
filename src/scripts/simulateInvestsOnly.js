@@ -42,19 +42,19 @@ module.exports = async function(callback) {
       data.push({
         x: (await mToken.totalSupply()),
         // x: investAmountInStep.muln(i),
-        // y: await mToken.calculateInvestReward(ONE_TO_WEI)
+        // y: await mToken.calculateBuyReward(ONE_TO_WEI)
         y_contract: await mToken.calculateSellShareReward(ONE_TO_WEI),
         y_average: lastAveragePrice,
       })
 
-      const result = await mToken.invest(investAmountInStep, web3.utils.toBN('0'))
+      const result = await mToken.buy(investAmountInStep, web3.utils.toBN('0'))
       if (i % 50 == 0) {
         console.log(`Simulated ${i} steps...`);
       }
 
-      const investLog = result.logs[5].args;
-      const totalPrice = investLog.investmentInReserveCurrency.add(investLog.feeInReserveCurrency);
-      const averagePriceInWei = totalPrice.div(investLog.gainedAmountOfMTokens);
+      const buyLog = result.logs[5].args;
+      const totalPrice = buyLog.buyInReserveCurrency.add(buyLog.feeInReserveCurrency);
+      const averagePriceInWei = totalPrice.div(buyLog.gainedAmountOfMTokens);
       lastAveragePrice = averagePriceInWei.mul(ONE_TO_WEI);
     }
 

@@ -34,7 +34,7 @@ module.exports = async function(callback) {
     for (let i = 0; i < investments.length; i++) {
       let currentInvestment = i === 0 ? investments[0] : investments[i] - investments[i - 1];
       if (currentInvestment > 0) {
-        await investMem(memecoin, mToken, investor, currentInvestment);
+        await buyMTokens(memecoin, mToken, investor, currentInvestment);
       }
       totalInvestment += currentInvestment;
 
@@ -73,13 +73,13 @@ const weiToReadable = (weiValue) => {
   return b / 1000;
 }
 
-const investMem = async (memecoin, mToken, investor, memAmount) => {
+const buyMTokens = async (memecoin, mToken, investor, memAmount) => {
   const investedAmountWei = ONE_TO_WEI.muln(memAmount);
   await memecoin.approve(mToken.address, investedAmountWei, {from: investor});
-  const result = await mToken.invest(investedAmountWei, 1, {from: investor});
+  const result = await mToken.buy(investedAmountWei, 1, {from: investor});
 
-  const investLog = result.logs[5].args;
-  const gainedMTokens = investLog.gainedAmountOfMTokens;
+  const buyLog = result.logs[5].args;
+  const gainedMTokens = buyLog.gainedAmountOfMTokens;
 
   return gainedMTokens;
 }
