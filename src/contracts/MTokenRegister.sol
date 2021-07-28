@@ -14,7 +14,7 @@ import {StringUtils} from "./libraries/StringUtils.sol";
 
 
 /// @title ERC721 token
-/// @dev This is used only for unit tests
+/// @dev Contract managing register of mToken contracts
 contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
   using SafeERC20 for IERC20;
@@ -58,7 +58,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
   * (address) 0..n => MTokenRegistration (mToken contract addresses)
   */
   mapping(address => MTokenRegistration) public mTokenRegister;
-  address[] public memecoinRegisterIndex;
+  address[] public mTokenRegisterIndex;
 
   /**
   * @dev helper index, maps numeric hashes of mToken contract names to symbolic mToken registration ids
@@ -206,8 +206,8 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     uint256 numericHashOfTokenName = getNumericHashFromString(_mTokenName);
     uint256 numericHashOfTokenSymbolName = getNumericHashFromString(_mTokenSymbol);
 
-    memecoinRegisterIndex.push(mTokenAddress);
-    mTokenRegister[mTokenAddress] = MTokenRegistration(memecoinRegisterIndex.length, address(mTokenFactory), msg.sender);
+    mTokenRegisterIndex.push(mTokenAddress);
+    mTokenRegister[mTokenAddress] = MTokenRegistration(mTokenRegisterIndex.length, address(mTokenFactory), msg.sender);
     symbolHashIndex[numericHashOfTokenSymbolName] = mTokenAddress;
     nameHashIndex[numericHashOfTokenName] = mTokenAddress;
 
@@ -216,7 +216,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
     emit MTokenRegistered(mTokenAddress, creationPrice, reserveCurrencyInitialSupply);
 
-    return memecoinRegisterIndex.length -1;
+    return mTokenRegisterIndex.length -1;
   }
   
 
@@ -229,7 +229,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     view 
     returns (uint256 mtokensRegisteredCount)
   {
-    return memecoinRegisterIndex.length;
+    return mTokenRegisterIndex.length;
   }
 
   /**
@@ -241,7 +241,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     view
     returns (bool isRegistered)
   {
-    if (memecoinRegisterIndex.length == 0) {
+    if (mTokenRegisterIndex.length == 0) {
       return false;
     }
 
@@ -265,7 +265,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     view
     returns (bool isRegistered)
   {
-    if (memecoinRegisterIndex.length == 0) {
+    if (mTokenRegisterIndex.length == 0) {
       return false;
     }
 

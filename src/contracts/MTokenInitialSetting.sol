@@ -213,7 +213,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   }
 
   /**
-  * @dev Sets mToken initial invest/sale fee.
+  * @dev Sets mToken initial buy/sale fee.
   * @param _fee initial fee of newly created mToken
   */
   function setInitialFee(uint16 _fee)
@@ -229,7 +229,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
   }
 
   /**
-  * @dev Sets mToken initial invest/sale fee limit.
+  * @dev Sets mToken initial buy/sale fee limit.
   * @param _feeLimit initial fee of newly created mToken
   */
   function setInitialFeeLimit(uint16 _feeLimit)
