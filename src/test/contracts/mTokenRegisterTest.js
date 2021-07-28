@@ -115,7 +115,7 @@ contract("MTokenRegisterTest", accounts => {
       it("Creates new MToken", async () => {
         //  set up allowance first
         let { logs } = await this.mTokenRegister.createMToken(DODGDE_MTOKEN_NAME, DODGDE_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
-        let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
+        let lastAddress = await this.mTokenRegister.mTokenRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
 
         expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
       });
@@ -130,7 +130,7 @@ contract("MTokenRegisterTest", accounts => {
 
       it("Check index of registered mToken", async () => {
         let lastRegisteredId = new BN(await this.mTokenRegister.totalRegistered()) -1;
-        let lastMTokenContractAddress = await this.mTokenRegister.memecoinRegisterIndex(lastRegisteredId);
+        let lastMTokenContractAddress = await this.mTokenRegister.mTokenRegisterIndex(lastRegisteredId);
         let mToken = await ERC20.at(lastMTokenContractAddress);
 
         let mTokenNameHash = await this.mTokenRegister.getNumericHashFromString(await mToken.name());
@@ -158,7 +158,7 @@ contract("MTokenRegisterTest", accounts => {
 
       it("Creates another cool MToken", async () => {
         let { logs } = await this.mTokenRegister.createMToken(COOLPANDA_MTOKEN_NAME, COOLPANDA_MTOKEN_SYMBOL, {from: summerAsCorrectCreator});
-        let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
+        let lastAddress = await this.mTokenRegister.mTokenRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
         expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
 
         let mToken = await ERC20.at(lastAddress);
@@ -176,7 +176,7 @@ contract("MTokenRegisterTest", accounts => {
 
       it("MToken name and symbol valid", async () => {
         let { logs } = await this.mTokenRegister.createMToken("Dodge Meme", "DGMXXXX", {from: summerAsCorrectCreator});
-        let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
+        let lastAddress = await this.mTokenRegister.mTokenRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
         expectEvent.inLogs(logs, 'MTokenRegistered', { mTokenContract: lastAddress});
       });
 
@@ -206,7 +206,7 @@ contract("MTokenRegisterTest", accounts => {
 
       it("MToken name and symbol are correctly stripped", async () => {
         await this.mTokenRegister.createMToken("   Dodge Meme 6     ", "   DGMXXXX6  ", {from: summerAsCorrectCreator});
-        let lastAddress = await this.mTokenRegister.memecoinRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
+        let lastAddress = await this.mTokenRegister.mTokenRegisterIndex(await this.mTokenRegister.totalRegistered() -1);
         let mToken = await MToken.at(lastAddress);
 
         let name = await mToken.name();
