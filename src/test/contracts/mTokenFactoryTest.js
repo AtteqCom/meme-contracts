@@ -25,7 +25,7 @@ contract("MTokenFactoryTest", accounts => {
   });
 
   it("Only Meme Coin Register contract as caller can create MToken", async () => {
-    await expectRevert(this.mTokenFactory.createMToken('CanBeAnythingAtThisPoint', 'CBAATP', {from: rick}), "ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER");
+    await expectRevert(this.mTokenFactory.createMToken(rick, 'CanBeAnythingAtThisPoint', 'CBAATP', {from: rick}), "ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER");
   });
 
   it("Pause contract", async () => {
@@ -34,7 +34,7 @@ contract("MTokenFactoryTest", accounts => {
   });
 
   it("Revert when paused", async () => {
-    await expectRevert(this.mTokenFactory.createMToken('CanBeAnythingAtThisPoint', 'CBAATP'), "Pausable: paused");
+    await expectRevert(this.mTokenFactory.createMToken(owner, 'CanBeAnythingAtThisPoint', 'CBAATP'), "Pausable: paused");
   });
 
 
