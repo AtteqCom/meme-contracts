@@ -35,14 +35,15 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
 
   /**
   * @dev Allows mTokenRegister as caller to create new MemeticToken Contract (MToken). 
+  * @param _creator creator of mToken
   * @param _mTokenName name of new MToken contract
   * @param _mTokenSymbol symbol of new MToken contract
   */
-  function createMToken(string calldata _mTokenName, string calldata _mTokenSymbol)
+  function createMToken(address _creator, string calldata _mTokenName, string calldata _mTokenSymbol)
     external
     override
     whenNotPaused
-    returns(address) 
+    returns(address)
   {
     require(msg.sender == address(mTokenRegister), ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER);
   
@@ -50,6 +51,7 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
 
     MToken mToken = new MToken(
       owner(),
+      _creator,
       mTokenSetting.initialSupply,
       _mTokenName,
       _mTokenSymbol,

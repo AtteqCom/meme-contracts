@@ -60,6 +60,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   constructor(
     address _owner,
+    address _creator,
     uint256 _initialSupply,
     string memory _memeTokenName, 
     string memory _memeTokenSymbol,
@@ -72,7 +73,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     require(_feeLimit < ONE_HUNDRED_PERCENT, ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT);
     transferOwnership(_owner);
 
-    _mint(address(this), _initialSupply);
+    _mint(_creator, _initialSupply);
 
     reserveCurrency = _reserveCurrency;
     reserveWeight = _reserveWeight;

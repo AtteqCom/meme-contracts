@@ -36,8 +36,11 @@ contract("MTokenTest", accounts => {
 
   it("Create MToken", async () => {
 
+    let ownerAsCreator = owner;
+
     this.mToken = await MToken.new(
       rickAsMTokenOwner,
+      ownerAsCreator,
       this.mTokenSetting.initialSupply,
       TOKEN_NAME,
       TOKEN_SYMBOL,
@@ -50,7 +53,10 @@ contract("MTokenTest", accounts => {
 
     assert.equal(await this.mToken.name(), TOKEN_NAME);
     assert.equal(await this.mToken.symbol(), TOKEN_SYMBOL);
-    assert(await this.mToken.totalSupply() > 0);
+    let mTokenSupply = await this.mToken.totalSupply();
+    let mTokenBalanceOfCreator = await this.mToken.balanceOf(ownerAsCreator);
+    assert(mTokenSupply > 0);
+    assert.equal(mTokenSupply.toString(), mTokenBalanceOfCreator.toString());
     assert.equal((await this.mToken.totalSupply()).toString(), this.mTokenSetting.initialSupply.toString());
   });
 

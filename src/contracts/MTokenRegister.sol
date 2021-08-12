@@ -200,7 +200,7 @@ contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
     memecoin.safeTransferFrom(msg.sender, owner(), creationPrice);
 
     // create
-    address mTokenAddress = mTokenFactory.createMToken(_mTokenName, _mTokenSymbol);
+    address mTokenAddress = mTokenFactory.createMToken(msg.sender, _mTokenName, _mTokenSymbol);
 
     // add mToken to register
     uint256 numericHashOfTokenName = getNumericHashFromString(_mTokenName);
