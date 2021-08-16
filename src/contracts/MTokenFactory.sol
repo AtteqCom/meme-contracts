@@ -34,6 +34,7 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
   /**
   * @dev Allows mTokenRegister as caller to create new MemeticToken Contract (MToken). 
   * @param _creator creator of mToken
+  * @param _reserveCurrencyAddress reserve currency used in mToken
   * @param _mTokenName name of new MToken contract
   * @param _mTokenSymbol symbol of new MToken contract
   */
