@@ -7,8 +7,8 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {MTokenRegisterInterface} from "./interfaces/MTokenRegisterInterface.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
 import {IBancorFormula} from "./bancor/IBancorFormula.sol";
-import {Memecoin} from "./Memecoin.sol";
 import {MTokenInitialSetting} from "./MTokenInitialSetting.sol";
+import {Memecoin} from "./Memecoin.sol";
 import {MToken} from "./MToken.sol";
 
 
@@ -22,13 +22,11 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
   string internal constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
 
   MTokenRegisterInterface public immutable mTokenRegister;
-  Memecoin public immutable reserveCurrency;
   MTokenInitialSetting public immutable mTokenInitialSetting;
   IBancorFormula public immutable bancorFormula;
 
-  constructor(MTokenRegisterInterface _mTokenRegister, Memecoin _reserveCurrency, MTokenInitialSetting _mTokenInitialSetting,  IBancorFormula _bancorFormula) {
+  constructor(MTokenRegisterInterface _mTokenRegister, MTokenInitialSetting _mTokenInitialSetting,  IBancorFormula _bancorFormula) {
     mTokenRegister = _mTokenRegister;
-    reserveCurrency = _reserveCurrency;
     mTokenInitialSetting = _mTokenInitialSetting;
     bancorFormula = _bancorFormula;
   }
@@ -36,10 +34,11 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
   /**
   * @dev Allows mTokenRegister as caller to create new MemeticToken Contract (MToken). 
   * @param _creator creator of mToken
+  * @param _reserveCurrencyAddress reserve currency used in mToken
   * @param _mTokenName name of new MToken contract
   * @param _mTokenSymbol symbol of new MToken contract
   */
-  function createMToken(address _creator, string calldata _mTokenName, string calldata _mTokenSymbol)
+  function createMToken(address _creator, address _reserveCurrencyAddress, string calldata _mTokenName, string calldata _mTokenSymbol)
     external
     override
     whenNotPaused
@@ -55,7 +54,7 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
       mTokenSetting.initialSupply,
       _mTokenName,
       _mTokenSymbol,
-      reserveCurrency,
+      Memecoin(_reserveCurrencyAddress),
       mTokenSetting.reserveCurrencyWeight,
       mTokenSetting.fee,
       mTokenSetting.feeLimit,

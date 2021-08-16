@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
+import {Memecoin} from "../Memecoin.sol";
 
 /**
  * @title Marble Coin Register Interface
@@ -8,13 +9,12 @@ pragma solidity 0.8.0;
  */
 interface MTokenFactoryInterface {
 
-
   /**
   * @dev Create mToken with provided name.
   * @param _mTokenName Percent cut the auctioneer takes on each auction, must be between 0-10000. Values 0-10,000 map to 0%-100%.
   */
   function createMToken(
-    address _creator, string calldata _mTokenName, string calldata _mTokenSymbol
+    address _creator, address _reserveCurrencyAddress, string calldata _mTokenName, string calldata _mTokenSymbol
   )
    external returns(address);
 

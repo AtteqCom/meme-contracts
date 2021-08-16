@@ -21,11 +21,11 @@ contract("MTokenFactoryTest", accounts => {
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
 
-    this.mTokenFactory = await MTokenFactory.new(this.mTokenRegister.address, this.memecoin.address, this.mTokenInitialSetting.address, this.bancor.address);
+    this.mTokenFactory = await MTokenFactory.new(this.mTokenRegister.address, this.mTokenInitialSetting.address, this.bancor.address);
   });
 
   it("Only Meme Coin Register contract as caller can create MToken", async () => {
-    await expectRevert(this.mTokenFactory.createMToken(rick, 'CanBeAnythingAtThisPoint', 'CBAATP', {from: rick}), "ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER");
+    await expectRevert(this.mTokenFactory.createMToken(rick, this.memecoin.address, 'CanBeAnythingAtThisPoint', 'CBAATP', {from: rick}), "ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER");
   });
 
   it("Pause contract", async () => {
@@ -34,7 +34,7 @@ contract("MTokenFactoryTest", accounts => {
   });
 
   it("Revert when paused", async () => {
-    await expectRevert(this.mTokenFactory.createMToken(owner, 'CanBeAnythingAtThisPoint', 'CBAATP'), "Pausable: paused");
+    await expectRevert(this.mTokenFactory.createMToken(owner, this.memecoin.address, 'CanBeAnythingAtThisPoint', 'CBAATP'), "Pausable: paused");
   });
 
 
