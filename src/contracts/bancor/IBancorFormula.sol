@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache License v2.0
 // copied from: https://github.com/bancorprotocol/contracts-solidity/blob/master/solidity/contracts/converter/interfaces/IBancorFormula.sol
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 /*
     Bancor Formula interface

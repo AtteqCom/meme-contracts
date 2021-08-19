@@ -2,7 +2,7 @@
 Original work taken from https://github.com/tapmydata/tap-protocol, which 
 was based on https://gist.github.com/rstormsf/7cfb0c6b7a835c0c67b4a394b4fd9383.
 */
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -100,15 +100,15 @@ contract VestingVault is Ownable {
 
         uint256 amountNotVested = tokenGrant.amount - tokenGrant.totalClaimed - amountVested;
 
-        require(token.transfer(owner(), amountNotVested));
-        require(token.transfer(_recipient, amountVested));
-
         tokenGrant.startTime = 0;
         tokenGrant.amount = 0;
         tokenGrant.vestingDuration = 0;
         tokenGrant.daysClaimed = 0;
         tokenGrant.totalClaimed = 0;
         tokenGrant.recipient = address(0);
+
+        require(token.transfer(owner(), amountNotVested));
+        require(token.transfer(_recipient, amountVested));
 
         emit GrantRevoked(_recipient, amountVested, amountNotVested);
     }
