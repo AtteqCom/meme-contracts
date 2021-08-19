@@ -94,7 +94,7 @@ contract MasterMeme is Ownable {
 
     // Add a new lp to the pool. Can only be called by the owner.
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
+    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner returns (uint256 _addedPoolId) {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
 
         massUpdatePools();
@@ -108,6 +108,10 @@ contract MasterMeme is Ownable {
             accMemePerShare: 0,
             depositFeeBP: _depositFeeBP
         }));
+
+        uint256 poolId = poolInfo.length -1;
+
+        return poolId;
     }
 
     // Update the given pool's meme allocation point and deposit fee. Can only be called by the owner.
