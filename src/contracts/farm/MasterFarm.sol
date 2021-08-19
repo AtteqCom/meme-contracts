@@ -4,8 +4,10 @@ pragma solidity >=0.6.4;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../libraries/IBEP20.sol";
-import "../libraries/SafeBEP20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import {Memecoin} from "./Memecoin.sol";
 
 /**
 * @title MasterMeme
@@ -14,6 +16,7 @@ import "../libraries/SafeBEP20.sol";
 contract MasterMeme is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
+    using SafeERC20 for Memecoin;
 
     // Info of each user.
     struct UserInfo {
@@ -34,14 +37,14 @@ contract MasterMeme is Ownable {
 
     // Info of each pool.
     struct PoolInfo {
-        IBEP20 lpToken;           // Address of LP token contract.
+        IERC20 lpToken;           // Address of LP token contract.
         uint256 allocPoint;       // How many allocation points assigned to this pool. MEMEs to distribute per block.
         uint256 lastRewardBlock;  // Last block number that MEMEs distribution occurs.
         uint256 accMemePerShare;   // Accumulated MEMEs per share, times 1e12. See below.
         uint16 depositFeeBP;      // Deposit fee in basis points
     }
 
-    IBEP20 public meme;
+    Memecoin public meme;
 
     // MEME tokens rewarded per block.
     uint256 public memePerBlock;
@@ -72,7 +75,7 @@ contract MasterMeme is Ownable {
     event FeeAddressUpdated(address indexed newFeeAddress);
 
     constructor(
-        IBEP20 _meme,
+        Memecoin _meme,
         address _rewardAddress,
         address _feeAddress,
         uint256 _memePerBlock
@@ -212,6 +215,8 @@ contract MasterMeme is Ownable {
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw(uint256 _pid) public {
+        require(meme.paused(), 'Can be called only when MEME is paused');
+
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         uint256 amount = user.amount;
