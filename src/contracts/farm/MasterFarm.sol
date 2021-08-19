@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {Memecoin} from "./Memecoin.sol";
+import {Memecoin} from "../Memecoin.sol";
 
 /**
 * @title MasterMeme
@@ -15,7 +15,7 @@ import {Memecoin} from "./Memecoin.sol";
 */
 contract MasterMeme is Ownable {
     using SafeMath for uint256;
-    using SafeBEP20 for IBEP20;
+    using SafeERC20 for IERC20;
     using SafeERC20 for Memecoin;
 
     // Info of each user.
@@ -97,7 +97,7 @@ contract MasterMeme is Ownable {
 
     // Add a new lp to the pool. Can only be called by the owner.
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
+    function add(uint256 _allocPoint, IERC20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
         if (_withUpdate) {
             massUpdatePools();
