@@ -21,7 +21,7 @@ contract("MTokenFactoryTest", accounts => {
     this.bancor = await BancorFormula.new();
     await this.bancor.init();
 
-    this.mTokenFactory = await MTokenFactory.new(this.mTokenRegister.address, this.memecoin.address, this.mTokenInitialSetting.address, this.bancor.address);
+    this.mTokenFactory = await MTokenFactory.new(this.mTokenRegister.address, this.mTokenInitialSetting.address, this.bancor.address);
   });
 
   it("Only Meme Coin Register contract as caller can create MToken", async () => {
