@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.4;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -8,10 +8,10 @@ import "../libraries/IBEP20.sol";
 import "../libraries/SafeBEP20.sol";
 
 /**
-* @title MasterMeme
+* @title MasterFarm
 * @dev farming contract for meme.com liquidity mining
 */
-contract MasterMeme is Ownable {
+contract MasterFarm is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -47,7 +47,7 @@ contract MasterMeme is Ownable {
     uint256 public memePerBlock;
 
     // Bonus muliplier for early meme makers.
-    uint256 public constant BONUS_MULTIPLIER = 1;
+    uint8 public bonusMultiplier = 1;
 
     // Deposit Fee address
     address public feeAddress;
@@ -57,6 +57,8 @@ contract MasterMeme is Ownable {
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
+    mapping (address => uint256) public poolInfoMap;
+
     // Info of each user that stakes LP tokens.
     mapping (uint256 => mapping (address => UserInfo)) public userInfo;
     // Total allocation points. Must be the sum of all allocation points in all pools.
@@ -70,6 +72,7 @@ contract MasterMeme is Ownable {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event RewardAddressUpdated(address indexed newRewardAddress);
     event FeeAddressUpdated(address indexed newFeeAddress);
+    event BonusMultiplierUpdated(uint8 bonusMultiplier);
 
     constructor(
         IBEP20 _meme,
@@ -93,14 +96,15 @@ contract MasterMeme is Ownable {
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
+    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner returns (uint256 _addedPoolId) {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
-        if (_withUpdate) {
-            massUpdatePools();
-        }
+        require(!this.isPoolAdded(address(_lpToken)), "add: pool is already added");
+
+        massUpdatePools();
+
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
+        
         poolInfo.push(PoolInfo({
             lpToken: _lpToken,
             allocPoint: _allocPoint,
@@ -108,14 +112,19 @@ contract MasterMeme is Ownable {
             accMemePerShare: 0,
             depositFeeBP: _depositFeeBP
         }));
+
+        uint256 poolId = poolInfo.length -1;
+        poolInfoMap[address(_lpToken)] = poolId;
+
+        return poolId;
     }
 
     // Update the given pool's meme allocation point and deposit fee. Can only be called by the owner.
     function set(uint256 _pid, uint256 _allocPoint, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
         require(_depositFeeBP <= 10000, "set: invalid deposit fee basis points");
-        if (_withUpdate) {
-            massUpdatePools();
-        }
+
+        massUpdatePools();
+        
         totalAllocPoint = totalAllocPoint.sub(poolInfo[_pid].allocPoint).add(_allocPoint);
         poolInfo[_pid].allocPoint = _allocPoint;
         poolInfo[_pid].depositFeeBP = _depositFeeBP;
@@ -123,7 +132,7 @@ contract MasterMeme is Ownable {
 
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to) public pure returns (uint256) {
-        return _to.sub(_from).mul(BONUS_MULTIPLIER);
+        return _to.sub(_from).mul(uint256(bonusMultiplier));
     }
 
     // View function to see pending MEMEs on frontend.
@@ -199,6 +208,8 @@ contract MasterMeme is Ownable {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
         uint256 pending = user.amount.mul(pool.accMemePerShare).div(1e12).sub(user.rewardDebt);
+        user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
+        
         if (pending > 0) {
             safeMemeTransfer(msg.sender, pending);
         }
@@ -206,7 +217,7 @@ contract MasterMeme is Ownable {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount); 
         }
-        user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
+        
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
@@ -241,8 +252,25 @@ contract MasterMeme is Ownable {
         emit FeeAddressUpdated(_feeAddress);
     }
 
+    function setBonusMultiplier(uint8 _newMultiplier) external onlyOwner {
+        bonusMultiplier = _newMultiplier;
+        emit BonusMultiplierUpdated(_newMultiplier);
+    }
+
     function updateEmissionRate(uint256 _memePerBlock) external onlyOwner {
         massUpdatePools();
         memePerBlock = _memePerBlock;
+    }
+
+    function isPoolAdded(address lpToken) public view returns (bool)
+    {
+        if (poolInfo.length == 0) {
+            return false;
+        }
+
+        uint256 index = poolInfoMap[lpToken];
+        PoolInfo memory pool = poolInfo[index];
+
+        return address(pool.lpToken) == lpToken;
     }
 }

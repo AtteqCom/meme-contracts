@@ -18,6 +18,7 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
     string internal constant ERROR_FEE_ABOVE_LIMIT = 'ERROR_FEE_ABOVE_LIMIT';
     string internal constant ERROR_FEE_LIMIT_ABOVE_OR_EQAULS_TO_HUNDRED_PERCENT = 'ERROR_FEE_LIMIT_ABOVE_OR_EQAULS_TO_HUNDRED_PERCENT';
     string internal constant ERROR_RESERVE_CURRENCY_WEIGHT_IS_ABOVE_MAX = 'ERROR_RESERVE_CURRENCY_WEIGHT_IS_ABOVE_MAX';
+    string internal constant ERROR_FEE_LIMIT_SMALLER_THAN_FEE = 'ERROR_FEE_LIMIT_SMALLER_THAN_FEE';
 
     uint16 internal constant ONE_HUNDRED_PERCENT = 10000;
     uint32 internal constant MAX_RESERVE_CURRENCY_WEIGHT = 1000000;
@@ -83,6 +84,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
     uint32 _reserveCurrencyWeight,
     uint256 _reserveCurrencyInitialSupply
   ) {
+    require(_fee < _feeLimit, ERROR_FEE_LIMIT_SMALLER_THAN_FEE);
+
     MTokenSetting memory _mTokenSetting = MTokenSetting(
       _creationPrice,
       _initialSupply,
@@ -238,6 +241,8 @@ contract MTokenInitialSetting is Ownable, MTokenInitialSettingInterface {
     aboveZero(_feeLimit, ERROR_FEE_LIMIT_CAN_NOT_BE_ZERO)
     feeLimitSmallerThanHundredPercent(_feeLimit)
   {
+    require(mTokenSetting.fee < _feeLimit, 'ERROR_FEE_LIMIT_SMALLER_THAN_FEE');
+
     uint16 oldFeeLimit = mTokenSetting.feeLimit;
 
     mTokenSetting.feeLimit = _feeLimit;

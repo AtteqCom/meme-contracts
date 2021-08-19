@@ -26,6 +26,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   string internal constant ERROR_MINIMUM_BUY_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_BUY_TARGET_AMOUNT_NOT_MET';
 
+  string internal constant ERROR_FEE_LIMIT_SMALLER_THAN_FEE = 'ERROR_FEE_LIMIT_SMALLER_THAN_FEE';
+
   uint256 public constant ONE_MTOKEN = 1e18;
 
   uint16 internal constant ONE_HUNDRED_PERCENT = 10000;
@@ -70,6 +72,8 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     IBancorFormula _formula) ERC20(_memeTokenName, _memeTokenSymbol)
   {
     require(_feeLimit < ONE_HUNDRED_PERCENT, ERROR_FEE_LIMIT_IS_HIGHER_THAN_HUNDRED_PERCENT);
+    require(_fee < _feeLimit, ERROR_FEE_LIMIT_SMALLER_THAN_FEE);
+
     transferOwnership(_owner);
 
     _mint(address(this), _initialSupply);
