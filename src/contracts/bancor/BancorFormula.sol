@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache License v2.0
 // copied from: https://github.com/bancorprotocol/contracts-solidity/blob/master/solidity/contracts/converter/BancorFormula.sol
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./IBancorFormula.sol";
