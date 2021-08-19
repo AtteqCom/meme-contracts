@@ -100,15 +100,15 @@ contract VestingVault is Ownable {
 
         uint256 amountNotVested = tokenGrant.amount - tokenGrant.totalClaimed - amountVested;
 
-        require(token.transfer(owner(), amountNotVested));
-        require(token.transfer(_recipient, amountVested));
-
         tokenGrant.startTime = 0;
         tokenGrant.amount = 0;
         tokenGrant.vestingDuration = 0;
         tokenGrant.daysClaimed = 0;
         tokenGrant.totalClaimed = 0;
         tokenGrant.recipient = address(0);
+
+        require(token.transfer(owner(), amountNotVested));
+        require(token.transfer(_recipient, amountVested));
 
         emit GrantRevoked(_recipient, amountVested, amountNotVested);
     }
