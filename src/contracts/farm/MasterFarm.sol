@@ -8,10 +8,10 @@ import "../libraries/IBEP20.sol";
 import "../libraries/SafeBEP20.sol";
 
 /**
-* @title MasterMeme
+* @title MasterFarm
 * @dev farming contract for meme.com liquidity mining
 */
-contract MasterMeme is Ownable {
+contract MasterFarm is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
