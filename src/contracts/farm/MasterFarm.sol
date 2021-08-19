@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.4;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -47,7 +47,7 @@ contract MasterFarm is Ownable {
     uint256 public memePerBlock;
 
     // Bonus muliplier for early meme makers.
-    uint256 public constant BONUS_MULTIPLIER = 1;
+    uint8 public bonusMultiplier = 1;
 
     // Deposit Fee address
     address public feeAddress;
@@ -72,6 +72,7 @@ contract MasterFarm is Ownable {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event RewardAddressUpdated(address indexed newRewardAddress);
     event FeeAddressUpdated(address indexed newFeeAddress);
+    event BonusMultiplierUpdated(uint8 bonusMultiplier);
 
     constructor(
         IBEP20 _meme,
@@ -95,13 +96,12 @@ contract MasterFarm is Ownable {
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
+    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner returns (uint256 _addedPoolId) {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
         require(!this.isPoolAdded(address(_lpToken)), "add: pool is already added");
 
-        if (_withUpdate) {
-            massUpdatePools();
-        }
+        massUpdatePools();
+
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
         
@@ -113,15 +113,18 @@ contract MasterFarm is Ownable {
             depositFeeBP: _depositFeeBP
         }));
 
-        poolInfoMap[address(_lpToken)] = poolInfo.length - 1; 
+        uint256 poolId = poolInfo.length -1;
+        poolInfoMap[address(_lpToken)] = poolId;
+
+        return poolId;
     }
 
     // Update the given pool's meme allocation point and deposit fee. Can only be called by the owner.
     function set(uint256 _pid, uint256 _allocPoint, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
         require(_depositFeeBP <= 10000, "set: invalid deposit fee basis points");
-        if (_withUpdate) {
-            massUpdatePools();
-        }
+
+        massUpdatePools();
+        
         totalAllocPoint = totalAllocPoint.sub(poolInfo[_pid].allocPoint).add(_allocPoint);
         poolInfo[_pid].allocPoint = _allocPoint;
         poolInfo[_pid].depositFeeBP = _depositFeeBP;
@@ -129,7 +132,7 @@ contract MasterFarm is Ownable {
 
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to) public pure returns (uint256) {
-        return _to.sub(_from).mul(BONUS_MULTIPLIER);
+        return _to.sub(_from).mul(uint256(bonusMultiplier));
     }
 
     // View function to see pending MEMEs on frontend.
@@ -205,6 +208,8 @@ contract MasterFarm is Ownable {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
         uint256 pending = user.amount.mul(pool.accMemePerShare).div(1e12).sub(user.rewardDebt);
+        user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
+        
         if (pending > 0) {
             safeMemeTransfer(msg.sender, pending);
         }
@@ -212,7 +217,7 @@ contract MasterFarm is Ownable {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount); 
         }
-        user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
+        
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
@@ -245,6 +250,11 @@ contract MasterFarm is Ownable {
     function setFeeAddress(address _feeAddress) external onlyOwner {
         feeAddress = _feeAddress;
         emit FeeAddressUpdated(_feeAddress);
+    }
+
+    function setBonusMultiplier(uint8 _newMultiplier) external onlyOwner {
+        bonusMultiplier = _newMultiplier;
+        emit BonusMultiplierUpdated(_newMultiplier);
     }
 
     function updateEmissionRate(uint256 _memePerBlock) external onlyOwner {

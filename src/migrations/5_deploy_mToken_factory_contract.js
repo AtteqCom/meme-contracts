@@ -17,7 +17,7 @@ module.exports = async function(deployer) {
   let bancorFormula = await BancorFormula.deployed();
   await bancorFormula.init();
   
-  await deployer.deploy(MTokenFactory, mTokenRegister.address, memecoin.address, mTokenInitialSetting.address, bancorFormula.address);
+  await deployer.deploy(MTokenFactory, mTokenRegister.address, mTokenInitialSetting.address, bancorFormula.address);
 
   let mTokenFactory = await MTokenFactory.deployed(); 
 

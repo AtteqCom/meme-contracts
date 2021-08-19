@@ -4,7 +4,7 @@ pragma solidity 0.8.0;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
-import {MTokenRegisterInterface} from "./interfaces/MTokenRegisterInterface.sol";
+import {MTokenRegister} from "./MTokenRegister.sol";
 import {MTokenFactoryInterface} from "./interfaces/MTokenFactoryInterface.sol";
 import {IBancorFormula} from "./bancor/IBancorFormula.sol";
 import {Memecoin} from "./Memecoin.sol";
@@ -21,14 +21,12 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
 
   string internal constant ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER = 'ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER';
 
-  MTokenRegisterInterface public immutable mTokenRegister;
-  Memecoin public immutable reserveCurrency;
+  MTokenRegister public immutable mTokenRegister;
   MTokenInitialSetting public immutable mTokenInitialSetting;
   IBancorFormula public immutable bancorFormula;
 
-  constructor(MTokenRegisterInterface _mTokenRegister, Memecoin _reserveCurrency, MTokenInitialSetting _mTokenInitialSetting,  IBancorFormula _bancorFormula) {
+  constructor(MTokenRegister _mTokenRegister, MTokenInitialSetting _mTokenInitialSetting,  IBancorFormula _bancorFormula) {
     mTokenRegister = _mTokenRegister;
-    reserveCurrency = _reserveCurrency;
     mTokenInitialSetting = _mTokenInitialSetting;
     bancorFormula = _bancorFormula;
   }
@@ -47,13 +45,12 @@ contract MTokenFactory is Ownable, Pausable, MTokenFactoryInterface {
     require(msg.sender == address(mTokenRegister), ERROR_CALLER_IS_NOT_MEME_COIN_REGISTER);
   
     MTokenInitialSetting.MTokenSetting memory mTokenSetting = mTokenInitialSetting.getMTokenInitialSetting();
-
     MToken mToken = new MToken(
       owner(),
       mTokenSetting.initialSupply,
       _mTokenName,
       _mTokenSymbol,
-      reserveCurrency,
+      Memecoin(mTokenRegister.memecoin.address),
       mTokenSetting.reserveCurrencyWeight,
       mTokenSetting.fee,
       mTokenSetting.feeLimit,
