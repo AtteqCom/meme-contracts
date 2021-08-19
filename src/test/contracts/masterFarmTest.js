@@ -149,4 +149,17 @@ contract("MasterFarmTest", accounts => {
     await this.masterMeme.updatePool(0);
     //await logInfo(this.masterMeme, 0, summer, this.memecoin);
   });
+
+
+  it("Is pool added", async () => {
+    console.log(await this.masterMeme.isPoolAdded(this.liquiditycoin.address));
+    console.log(await this.masterMeme.isPoolAdded(this.memecoin.address));
+  });
+
+  it("Revert adding same liquidity pool", async () => {
+    let allocationPoints = 5000;
+    let lpToken = this.liquiditycoin;
+    let depositFeeBP = 100; // 1%
+    await expectRevert(this.masterMeme.add(allocationPoints, lpToken.address, depositFeeBP, true), 'add: pool is already added');
+  });
 });
