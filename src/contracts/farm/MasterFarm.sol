@@ -96,7 +96,7 @@ contract MasterFarm is Ownable {
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner returns (uint256 _addedPoolId) {
+    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP) public onlyOwner returns (uint256 _addedPoolId) {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
         require(!this.isPoolAdded(address(_lpToken)), "add: pool is already added");
 
@@ -120,7 +120,7 @@ contract MasterFarm is Ownable {
     }
 
     // Update the given pool's meme allocation point and deposit fee. Can only be called by the owner.
-    function set(uint256 _pid, uint256 _allocPoint, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
+    function set(uint256 _pid, uint256 _allocPoint, uint16 _depositFeeBP) public onlyOwner {
         require(_depositFeeBP <= 10000, "set: invalid deposit fee basis points");
 
         massUpdatePools();
