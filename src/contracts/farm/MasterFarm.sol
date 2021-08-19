@@ -204,6 +204,8 @@ contract MasterFarm is Ownable {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
         uint256 pending = user.amount.mul(pool.accMemePerShare).div(1e12).sub(user.rewardDebt);
+        user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
+        
         if (pending > 0) {
             safeMemeTransfer(msg.sender, pending);
         }
@@ -211,7 +213,7 @@ contract MasterFarm is Ownable {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount); 
         }
-        user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
+        
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
