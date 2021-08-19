@@ -15,8 +15,8 @@ import {Memecoin} from "../Memecoin.sol";
 */
 contract MasterMeme is Ownable {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
     using SafeERC20 for Memecoin;
+    using SafeERC20 for IERC20;
 
     // Info of each user.
     struct UserInfo {
@@ -96,8 +96,7 @@ contract MasterMeme is Ownable {
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function add(uint256 _allocPoint, IERC20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
+    function add(uint256 _allocPoint, IERC20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner returns (uint256 _addedPoolId) {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
         if (_withUpdate) {
             massUpdatePools();
@@ -125,8 +124,8 @@ contract MasterMeme is Ownable {
     }
 
     // Return reward multiplier over the given _from to _to block.
-    function getMultiplier(uint256 _from, uint256 _to) public pure returns (uint256) {
-        return _to.sub(_from).mul(BONUS_MULTIPLIER);
+    function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
+        return _to.sub(_from).mul(uint256(bonusMultiplier));
     }
 
     // View function to see pending MEMEs on frontend.
@@ -164,7 +163,16 @@ contract MasterMeme is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 memeReward = multiplier.mul(memePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-        meme.safeTransferFrom(rewardAddress, address(this), memeReward);
+        uint256 rewardAddressBalance = meme.balanceOf(rewardAddress);
+
+        if (rewardAddressBalance < memeReward) {
+            memeReward = rewardAddressBalance;
+        }
+
+        if (memeReward > 0) {
+            meme.safeTransferFrom(rewardAddress, address(this), memeReward);
+        }
+        
         pool.accMemePerShare = pool.accMemePerShare.add(memeReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
     }
@@ -211,19 +219,6 @@ contract MasterMeme is Ownable {
         }
         user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
         emit Withdraw(msg.sender, _pid, _amount);
-    }
-
-    // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) public {
-        require(meme.paused(), 'Can be called only when MEME is paused');
-
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
-        uint256 amount = user.amount;
-        user.amount = 0;
-        user.rewardDebt = 0;
-        pool.lpToken.safeTransfer(address(msg.sender), amount);
-        emit EmergencyWithdraw(msg.sender, _pid, amount);
     }
 
     // Safe meme transfer function, just in case if rounding error causes pool to not have enough MEMEs.
