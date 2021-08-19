@@ -2,7 +2,7 @@
 Original work taken from https://github.com/tapmydata/tap-protocol, which 
 was based on https://gist.github.com/rstormsf/7cfb0c6b7a835c0c67b4a394b4fd9383.
 */
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
