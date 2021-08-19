@@ -47,7 +47,7 @@ contract MasterMeme is Ownable {
     uint256 public memePerBlock;
 
     // Bonus muliplier for early meme makers.
-    uint256 public constant BONUS_MULTIPLIER = 1;
+    uint8 public bonusMultiplier = 1;
 
     // Deposit Fee address
     address public feeAddress;
@@ -70,6 +70,7 @@ contract MasterMeme is Ownable {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event RewardAddressUpdated(address indexed newRewardAddress);
     event FeeAddressUpdated(address indexed newFeeAddress);
+    event BonusMultiplierUpdated(uint8 bonusMultiplier);
 
     constructor(
         IBEP20 _meme,
@@ -127,7 +128,7 @@ contract MasterMeme is Ownable {
 
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to) public pure returns (uint256) {
-        return _to.sub(_from).mul(BONUS_MULTIPLIER);
+        return _to.sub(_from).mul(uint256(bonusMultiplier));
     }
 
     // View function to see pending MEMEs on frontend.
@@ -243,6 +244,11 @@ contract MasterMeme is Ownable {
     function setFeeAddress(address _feeAddress) external onlyOwner {
         feeAddress = _feeAddress;
         emit FeeAddressUpdated(_feeAddress);
+    }
+
+    function setBonusMultiplier(uint8 _newMultiplier) external onlyOwner {
+        bonusMultiplier = _newMultiplier;
+        emit BonusMultiplierUpdated(_newMultiplier);
     }
 
     function updateEmissionRate(uint256 _memePerBlock) external onlyOwner {
