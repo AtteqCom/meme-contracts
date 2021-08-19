@@ -57,6 +57,8 @@ contract MasterFarm is Ownable {
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
+    mapping (address => uint256) public poolInfoMap;
+
     // Info of each user that stakes LP tokens.
     mapping (uint256 => mapping (address => UserInfo)) public userInfo;
     // Total allocation points. Must be the sum of all allocation points in all pools.
@@ -93,14 +95,16 @@ contract MasterFarm is Ownable {
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
     function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP, bool _withUpdate) public onlyOwner {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
+        require(!this.isPoolAdded(address(_lpToken)), "add: pool is already added");
+
         if (_withUpdate) {
             massUpdatePools();
         }
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
+        
         poolInfo.push(PoolInfo({
             lpToken: _lpToken,
             allocPoint: _allocPoint,
@@ -108,6 +112,8 @@ contract MasterFarm is Ownable {
             accMemePerShare: 0,
             depositFeeBP: _depositFeeBP
         }));
+
+        poolInfoMap[address(_lpToken)] = poolInfo.length - 1; 
     }
 
     // Update the given pool's meme allocation point and deposit fee. Can only be called by the owner.
@@ -244,5 +250,17 @@ contract MasterFarm is Ownable {
     function updateEmissionRate(uint256 _memePerBlock) external onlyOwner {
         massUpdatePools();
         memePerBlock = _memePerBlock;
+    }
+
+    function isPoolAdded(address lpToken) public view returns (bool)
+    {
+        if (poolInfo.length == 0) {
+            return false;
+        }
+
+        uint256 index = poolInfoMap[lpToken];
+        PoolInfo memory pool = poolInfo[index];
+
+        return address(pool.lpToken) == lpToken;
     }
 }
