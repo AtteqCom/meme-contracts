@@ -20,13 +20,13 @@ interface MTokenInterface is IERC20 {
     external;
 
   /**
-  * @dev Amount of reserve currency is invested for mTokens
-  * @param _amountOfReserveCurrency amount of reserve Currency to invest
-  * @param _minimumInvestmentTargetAmount minimum amount of mTokens gainned by this investment. if not met then fails. Fee included.
+  * @dev Amount of reserve currency is bought for mTokens
+  * @param _amountOfReserveCurrency amount of reserve Currency to buy
+  * @param _minimumBuyTargetAmount minimum amount of mTokens gainned by this buy. if not met then fails. Fee included.
   */
-  function invest(
+  function buy(
     uint256 _amountOfReserveCurrency,
-    uint256 _minimumInvestmentTargetAmount
+    uint256 _minimumBuyTargetAmount
   )
     external;
 
@@ -42,10 +42,10 @@ interface MTokenInterface is IERC20 {
     external;
 
   /**
-   * @dev Calculate amount of mTokens obtained by investing the given amount of Main Currency.
-   * @param _amountOfReserveCurrency amount of Main Currency to invest
+   * @dev Calculate amount of mTokens obtained by buying the given amount of Main Currency.
+   * @param _amountOfReserveCurrency amount of Main Currency to buy
    */
-  function calculateInvestReward(
+  function calculateBuyReward(
     uint256 _amountOfReserveCurrency
   )
     external
@@ -83,14 +83,14 @@ interface MTokenInterface is IERC20 {
     view
     returns (bool);
 
-  event Invested(
-    address investor, 
+  event Buy(
+    address buyer, 
     uint256 feeInReserveCurrency, 
-    uint256 investmentInReserveCurrency, 
+    uint256 buyInReserveCurrency, 
     uint256 gainedAmountOfMTokens);
 
   event SoldShare(
-    address investor,
+    address buyer,
     uint256 feeInReserveCurrency, 
     uint256 revenueInReserveCurrency, 
     uint256 amountSoldOfMTokens);

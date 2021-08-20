@@ -26,7 +26,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   string internal constant ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_SALE_TARGET_AMOUNT_NOT_MET';
 
-  string internal constant ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET';
+  string internal constant ERROR_MINIMUM_BUY_TARGET_AMOUNT_NOT_MET = 'ERROR_MINIMUM_BUY_TARGET_AMOUNT_NOT_MET';
 
   string internal constant ERROR_FEE_LIMIT_SMALLER_THAN_FEE = 'ERROR_FEE_LIMIT_SMALLER_THAN_FEE';
 
@@ -35,7 +35,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   uint16 internal constant ONE_HUNDRED_PERCENT = 10000;
 
   /**
-  * @dev Transaction fee applied to invest and sale prices where 1% is equal to 100. 100% equals to 10000
+  * @dev Transaction fee applied to buy and sale prices where 1% is equal to 100. 100% equals to 10000
   */
   uint16 public transactionFee;
 
@@ -109,13 +109,13 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   }
 
   /**
-  * @dev Amount of Main Currency is invested for mTokens
-  * @param _amountOfReserveCurrency amount of reserve currency to be invested
-  * @param _minimumInvestmentTargetAmount minimum amount of mTokens gainned by this investment. if not met then fails. Fee included.
+  * @dev Amount of Main Currency is bought for mTokens
+  * @param _amountOfReserveCurrency amount of reserve currency to be bought
+  * @param _minimumBuyTargetAmount minimum amount of mTokens gainned by this buy. if not met then fails. Fee included.
   */
-  function invest(
+  function buy(
     uint256 _amountOfReserveCurrency,
-    uint256 _minimumInvestmentTargetAmount
+    uint256 _minimumBuyTargetAmount
   )
     external
     override
@@ -127,13 +127,13 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
     uint256 reserveBalance = reserveCurrency.balanceOf(address(this));
     uint256 mTokenAmount = bancorFormula.purchaseTargetAmount(totalSupply(), reserveBalance, reserveWeight, amountOfReserveCurrencyExcludingFee);
 
-    require(mTokenAmount >= _minimumInvestmentTargetAmount, ERROR_MINIMUM_INVESTMENT_TARGET_AMOUNT_NOT_MET);
+    require(mTokenAmount >= _minimumBuyTargetAmount, ERROR_MINIMUM_BUY_TARGET_AMOUNT_NOT_MET);
 
     reserveCurrency.safeTransferFrom(msg.sender, address(this), amountOfReserveCurrencyExcludingFee);
     reserveCurrency.safeTransferFrom(msg.sender, owner(), fee);
     _mint(msg.sender, mTokenAmount);
 
-    emit Invested(msg.sender, fee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
+    emit Buy(msg.sender, fee, amountOfReserveCurrencyExcludingFee, mTokenAmount);
   }
 
   /**
@@ -165,10 +165,10 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   }
 
   /**
-  * @dev Calculate amount of mTokens obtained by investing the given amount of Main Currency.
+  * @dev Calculate amount of mTokens obtained by buying the given amount of Main Currency.
   * @param _amountOfReserveCurrency amount of Main Currency
   */
-  function calculateInvestReward(
+  function calculateBuyReward(
     uint256 _amountOfReserveCurrency
   )
     external
@@ -206,7 +206,7 @@ contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
   }
 
   /**
-  * @dev Stops minting of coins.. in other words direct investment to coin is postponed 
+  * @dev Stops minting of coins.. in other words direct buy to coin is postponed 
   */
   function pauseMinting()
     external
