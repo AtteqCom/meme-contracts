@@ -4,8 +4,8 @@ pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../libraries/IBEP20.sol";
-import "../libraries/SafeBEP20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
 * @title MasterFarm
@@ -13,7 +13,7 @@ import "../libraries/SafeBEP20.sol";
 */
 contract MasterFarm is Ownable {
     using SafeMath for uint256;
-    using SafeBEP20 for IBEP20;
+    using SafeERC20 for IERC20;
 
     // Info of each user.
     struct UserInfo {
@@ -34,14 +34,14 @@ contract MasterFarm is Ownable {
 
     // Info of each pool.
     struct PoolInfo {
-        IBEP20 lpToken;           // Address of LP token contract.
+        IERC20 lpToken;           // Address of LP token contract.
         uint256 allocPoint;       // How many allocation points assigned to this pool. MEMEs to distribute per block.
         uint256 lastRewardBlock;  // Last block number that MEMEs distribution occurs.
         uint256 accMemePerShare;   // Accumulated MEMEs per share, times 1e12. See below.
         uint16 depositFeeBP;      // Deposit fee in basis points
     }
 
-    IBEP20 public meme;
+    IERC20 public meme;
 
     // MEME tokens rewarded per block.
     uint256 public memePerBlock;
@@ -75,7 +75,7 @@ contract MasterFarm is Ownable {
     event BonusMultiplierUpdated(uint8 bonusMultiplier);
 
     constructor(
-        IBEP20 _meme,
+        IERC20 _meme,
         address _rewardAddress,
         address _feeAddress,
         uint256 _memePerBlock
@@ -96,7 +96,7 @@ contract MasterFarm is Ownable {
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    function add(uint256 _allocPoint, IBEP20 _lpToken, uint16 _depositFeeBP) public onlyOwner returns (uint256 _addedPoolId) {
+    function add(uint256 _allocPoint, IERC20 _lpToken, uint16 _depositFeeBP) public onlyOwner returns (uint256 _addedPoolId) {
         require(_depositFeeBP <= 10000, "add: invalid deposit fee basis points");
         require(!this.isPoolAdded(address(_lpToken)), "add: pool is already added");
 
@@ -131,7 +131,7 @@ contract MasterFarm is Ownable {
     }
 
     // Return reward multiplier over the given _from to _to block.
-    function getMultiplier(uint256 _from, uint256 _to) public pure returns (uint256) {
+    function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
         return _to.sub(_from).mul(uint256(bonusMultiplier));
     }
 
@@ -146,7 +146,8 @@ contract MasterFarm is Ownable {
             uint256 memeReward = multiplier.mul(memePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
             accMemePerShare = accMemePerShare.add(memeReward.mul(1e12).div(lpSupply));
         }
-        return user.amount.mul(accMemePerShare).div(1e12).sub(user.rewardDebt);
+        
+        return calculatePending(user.amount, pool.accMemePerShare, user.rewardDebt);
     }
 
     // Update reward variables for all pools. Be careful of gas spending!
@@ -170,7 +171,16 @@ contract MasterFarm is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 memeReward = multiplier.mul(memePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-        meme.safeTransferFrom(rewardAddress, address(this), memeReward);
+        uint256 rewardAddressBalance = meme.balanceOf(rewardAddress);
+
+        if (rewardAddressBalance < memeReward) {
+            memeReward = rewardAddressBalance;
+        }
+
+        if (memeReward > 0) {
+            meme.safeTransferFrom(rewardAddress, address(this), memeReward);
+        }
+        
         pool.accMemePerShare = pool.accMemePerShare.add(memeReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
     }
@@ -182,7 +192,7 @@ contract MasterFarm is Ownable {
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
         if (user.amount > 0) {
-            uint256 pending = user.amount.mul(pool.accMemePerShare).div(1e12).sub(user.rewardDebt);
+            uint256 pending = calculatePending(user.amount, pool.accMemePerShare, user.rewardDebt);
             if (pending > 0) {
                 safeMemeTransfer(msg.sender, pending);
             }
@@ -207,7 +217,8 @@ contract MasterFarm is Ownable {
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
-        uint256 pending = user.amount.mul(pool.accMemePerShare).div(1e12).sub(user.rewardDebt);
+
+        uint256 pending = calculatePending(user.amount, pool.accMemePerShare, user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accMemePerShare).div(1e12);
         
         if (pending > 0) {
@@ -221,17 +232,6 @@ contract MasterFarm is Ownable {
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
-    // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) public {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
-        uint256 amount = user.amount;
-        user.amount = 0;
-        user.rewardDebt = 0;
-        pool.lpToken.safeTransfer(address(msg.sender), amount);
-        emit EmergencyWithdraw(msg.sender, _pid, amount);
-    }
-
     // Safe meme transfer function, just in case if rounding error causes pool to not have enough MEMEs.
     function safeMemeTransfer(address _to, uint256 _amount) internal {
         uint256 memeBal = meme.balanceOf(address(this));
@@ -240,6 +240,11 @@ contract MasterFarm is Ownable {
         } else {
             meme.transfer(_to, _amount);
         }
+    }
+
+    function calculatePending(uint256 _amount, uint256 _accMemePerShare, uint256 _rewardDebt) internal pure returns(uint256) {
+        uint256 pending_part_one = _amount.mul(_accMemePerShare).div(1e12);
+        return pending_part_one < _rewardDebt ? 0 : pending_part_one.sub(_rewardDebt);
     }
 
     function setRewardAddress(address _rewardAddress) external onlyOwner {
