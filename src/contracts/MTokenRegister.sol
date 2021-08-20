@@ -15,7 +15,7 @@ import {StringUtils} from "./libraries/StringUtils.sol";
 
 /**
  * @title Memetic Token Register Contract
- * @notice Contract is register of Memetic Token Contracts (MTokens) and tool to create new ones.
+ * @notice Contract is register of Memetic Token Contracts (MTokens) with buil-in tool to create new MToken contracts.
  */
 contract MTokenRegister is Ownable, AccessControl, MTokenRegisterInterface {
 
