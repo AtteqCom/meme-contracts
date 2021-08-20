@@ -10,8 +10,10 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {IBancorFormula} from "./bancor/IBancorFormula.sol";
 import {MTokenInterface} from "./interfaces/MTokenInterface.sol";
 
-/// @title ERC20 token
-/// @dev This is used only for unit tests
+/**
+ * @title Memetic Token Contract
+ * @notice Contract provides ERC20 tokens with in build market mechanism based on bancor formula
+ */
 contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
   using SafeERC20 for IERC20;
