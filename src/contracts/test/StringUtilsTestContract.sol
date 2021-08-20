@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.0;
 
-import {StringUtils} from "./StringUtils.sol";
+import {StringUtils} from "../libraries/StringUtils.sol";
 
 contract StringUtilsTestContract {
 
