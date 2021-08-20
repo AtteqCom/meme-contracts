@@ -12,7 +12,7 @@ import {MTokenInterface} from "./interfaces/MTokenInterface.sol";
 
 /**
  * @title Memetic Token Contract
- * @notice Contract provides ERC20 tokens with in build market mechanism based on bancor formula
+ * @notice Contract provides ERC20 tokens with built-in market mechanism based on bancor formula
  */
 contract MToken is Ownable, Pausable, ERC20, MTokenInterface  {
 
