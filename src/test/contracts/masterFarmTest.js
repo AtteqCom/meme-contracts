@@ -78,9 +78,7 @@ contract("MasterFarmTest", accounts => {
 
   it("Set start block", async () => {
     let blockNumber = await time.latestBlock();
-    console.log(`block number: ${blockNumber}`);
     await this.masterMeme.setStartBlock(new BN(blockNumber));
-    console.log(`blockNumber: ${blockNumber} | ${await this.masterMeme.startBlock()}`);
     await assert.equal(blockNumber.toString(), (await this.masterMeme.startBlock()).toString());
   });
 

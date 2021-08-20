@@ -1,4 +1,4 @@
-const StringUtilsTestContract = artifacts.require("./libraries/StringUtilsTestContract.sol");
+const StringUtilsTestContract = artifacts.require("./test/StringUtilsTestContract.sol");
 
 
 contract("StringUtils", accounts => {
